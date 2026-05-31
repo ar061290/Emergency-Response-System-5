@@ -7,12 +7,24 @@
  */
 
 export * from './activeIncidentSummary';
+export * from './aiHospitalRecommendationInput';
+export * from './aiHospitalRecommendationInputHospitalsItem';
+export * from './aiHospitalRecommendationInputIncident';
+export * from './aiHospitalRecommendationResult';
+export * from './aiHospitalRecommendationResultRankingsItem';
+export * from './aiSeverityInput';
+export * from './aiSeverityResult';
+export * from './aiVoiceChatInput';
+export * from './aiVoiceChatResult';
 export * from './ambulance';
 export * from './busLocationInput';
 export * from './child';
 export * from './childInput';
 export * from './coverageGap';
+export * from './coverageRequest';
+export * from './coverageRequestInput';
 export * from './dashboardSummary';
+export * from './gpsPoint';
 export * from './healthStatus';
 export * from './hospital';
 export * from './incident';
@@ -24,6 +36,7 @@ export * from './listIncidentsParams';
 export * from './locationUpdate';
 export * from './message';
 export * from './messageInput';
+export * from './policeStation';
 export * from './routeAnalytic';
 export * from './schoolBus';
 export * from './sensorDataInput';

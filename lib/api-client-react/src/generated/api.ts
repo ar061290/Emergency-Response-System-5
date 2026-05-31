@@ -21,11 +21,20 @@ import type {
 
 import type {
   ActiveIncidentSummary,
+  AiHospitalRecommendationInput,
+  AiHospitalRecommendationResult,
+  AiSeverityInput,
+  AiSeverityResult,
+  AiVoiceChatInput,
+  AiVoiceChatResult,
   Ambulance,
   BusLocationInput,
   Child,
   ChildInput,
+  CoverageRequest,
+  CoverageRequestInput,
   DashboardSummary,
+  GpsPoint,
   HealthStatus,
   Hospital,
   Incident,
@@ -37,6 +46,7 @@ import type {
   LocationUpdate,
   Message,
   MessageInput,
+  PoliceStation,
   RouteAnalytic,
   SchoolBus,
   SensorDataInput,
@@ -1728,4 +1738,519 @@ export function useListRouteAnalytics<TData = Awaited<ReturnType<typeof listRout
 
 
 
+
+export const getListPoliceStationsUrl = () => {
+
+
+
+
+  return `/api/police-stations`
+}
+
+/**
+ * @summary List all police stations
+ */
+export const listPoliceStations = async ( options?: RequestInit): Promise<PoliceStation[]> => {
+
+  return customFetch<PoliceStation[]>(getListPoliceStationsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListPoliceStationsQueryKey = () => {
+    return [
+    `/api/police-stations`
+    ] as const;
+    }
+
+
+export const getListPoliceStationsQueryOptions = <TData = Awaited<ReturnType<typeof listPoliceStations>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listPoliceStations>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListPoliceStationsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listPoliceStations>>> = ({ signal }) => listPoliceStations({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listPoliceStations>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListPoliceStationsQueryResult = NonNullable<Awaited<ReturnType<typeof listPoliceStations>>>
+export type ListPoliceStationsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List all police stations
+ */
+
+export function useListPoliceStations<TData = Awaited<ReturnType<typeof listPoliceStations>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listPoliceStations>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListPoliceStationsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getListCoverageRequestsUrl = () => {
+
+
+
+
+  return `/api/coverage-requests`
+}
+
+/**
+ * @summary List submitted ambulance coverage requests
+ */
+export const listCoverageRequests = async ( options?: RequestInit): Promise<CoverageRequest[]> => {
+
+  return customFetch<CoverageRequest[]>(getListCoverageRequestsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListCoverageRequestsQueryKey = () => {
+    return [
+    `/api/coverage-requests`
+    ] as const;
+    }
+
+
+export const getListCoverageRequestsQueryOptions = <TData = Awaited<ReturnType<typeof listCoverageRequests>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listCoverageRequests>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListCoverageRequestsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listCoverageRequests>>> = ({ signal }) => listCoverageRequests({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listCoverageRequests>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListCoverageRequestsQueryResult = NonNullable<Awaited<ReturnType<typeof listCoverageRequests>>>
+export type ListCoverageRequestsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List submitted ambulance coverage requests
+ */
+
+export function useListCoverageRequests<TData = Awaited<ReturnType<typeof listCoverageRequests>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listCoverageRequests>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListCoverageRequestsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getSubmitCoverageRequestUrl = () => {
+
+
+
+
+  return `/api/coverage-requests`
+}
+
+/**
+ * @summary Submit an ambulance coverage improvement request
+ */
+export const submitCoverageRequest = async (coverageRequestInput: CoverageRequestInput, options?: RequestInit): Promise<CoverageRequest> => {
+
+  return customFetch<CoverageRequest>(getSubmitCoverageRequestUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      coverageRequestInput,)
+  }
+);}
+
+
+
+
+export const getSubmitCoverageRequestMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof submitCoverageRequest>>, TError,{data: BodyType<CoverageRequestInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof submitCoverageRequest>>, TError,{data: BodyType<CoverageRequestInput>}, TContext> => {
+
+const mutationKey = ['submitCoverageRequest'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof submitCoverageRequest>>, {data: BodyType<CoverageRequestInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  submitCoverageRequest(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SubmitCoverageRequestMutationResult = NonNullable<Awaited<ReturnType<typeof submitCoverageRequest>>>
+    export type SubmitCoverageRequestMutationBody = BodyType<CoverageRequestInput>
+    export type SubmitCoverageRequestMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Submit an ambulance coverage improvement request
+ */
+export const useSubmitCoverageRequest = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof submitCoverageRequest>>, TError,{data: BodyType<CoverageRequestInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof submitCoverageRequest>>,
+        TError,
+        {data: BodyType<CoverageRequestInput>},
+        TContext
+      > => {
+      return useMutation(getSubmitCoverageRequestMutationOptions(options));
+    }
+
+export const getGetIncidentGpsHistoryUrl = (incidentId: string,) => {
+
+
+
+
+  return `/api/incidents/${incidentId}/gps-history`
+}
+
+/**
+ * @summary Get GPS route history for an incident (for route playback)
+ */
+export const getIncidentGpsHistory = async (incidentId: string, options?: RequestInit): Promise<GpsPoint[]> => {
+
+  return customFetch<GpsPoint[]>(getGetIncidentGpsHistoryUrl(incidentId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetIncidentGpsHistoryQueryKey = (incidentId: string,) => {
+    return [
+    `/api/incidents/${incidentId}/gps-history`
+    ] as const;
+    }
+
+
+export const getGetIncidentGpsHistoryQueryOptions = <TData = Awaited<ReturnType<typeof getIncidentGpsHistory>>, TError = ErrorType<unknown>>(incidentId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getIncidentGpsHistory>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetIncidentGpsHistoryQueryKey(incidentId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getIncidentGpsHistory>>> = ({ signal }) => getIncidentGpsHistory(incidentId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(incidentId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getIncidentGpsHistory>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetIncidentGpsHistoryQueryResult = NonNullable<Awaited<ReturnType<typeof getIncidentGpsHistory>>>
+export type GetIncidentGpsHistoryQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get GPS route history for an incident (for route playback)
+ */
+
+export function useGetIncidentGpsHistory<TData = Awaited<ReturnType<typeof getIncidentGpsHistory>>, TError = ErrorType<unknown>>(
+ incidentId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getIncidentGpsHistory>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetIncidentGpsHistoryQueryOptions(incidentId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetAiHospitalRecommendationUrl = () => {
+
+
+
+
+  return `/api/ai/hospital-recommendation`
+}
+
+/**
+ * @summary AI-powered hospital ranking for an active incident
+ */
+export const getAiHospitalRecommendation = async (aiHospitalRecommendationInput: AiHospitalRecommendationInput, options?: RequestInit): Promise<AiHospitalRecommendationResult> => {
+
+  return customFetch<AiHospitalRecommendationResult>(getGetAiHospitalRecommendationUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      aiHospitalRecommendationInput,)
+  }
+);}
+
+
+
+
+export const getGetAiHospitalRecommendationMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getAiHospitalRecommendation>>, TError,{data: BodyType<AiHospitalRecommendationInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof getAiHospitalRecommendation>>, TError,{data: BodyType<AiHospitalRecommendationInput>}, TContext> => {
+
+const mutationKey = ['getAiHospitalRecommendation'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof getAiHospitalRecommendation>>, {data: BodyType<AiHospitalRecommendationInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  getAiHospitalRecommendation(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type GetAiHospitalRecommendationMutationResult = NonNullable<Awaited<ReturnType<typeof getAiHospitalRecommendation>>>
+    export type GetAiHospitalRecommendationMutationBody = BodyType<AiHospitalRecommendationInput>
+    export type GetAiHospitalRecommendationMutationError = ErrorType<unknown>
+
+    /**
+ * @summary AI-powered hospital ranking for an active incident
+ */
+export const useGetAiHospitalRecommendation = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getAiHospitalRecommendation>>, TError,{data: BodyType<AiHospitalRecommendationInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof getAiHospitalRecommendation>>,
+        TError,
+        {data: BodyType<AiHospitalRecommendationInput>},
+        TContext
+      > => {
+      return useMutation(getGetAiHospitalRecommendationMutationOptions(options));
+    }
+
+export const getAiClassifySeverityUrl = () => {
+
+
+
+
+  return `/api/ai/classify-severity`
+}
+
+/**
+ * @summary AI-powered incident severity classification
+ */
+export const aiClassifySeverity = async (aiSeverityInput: AiSeverityInput, options?: RequestInit): Promise<AiSeverityResult> => {
+
+  return customFetch<AiSeverityResult>(getAiClassifySeverityUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      aiSeverityInput,)
+  }
+);}
+
+
+
+
+export const getAiClassifySeverityMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof aiClassifySeverity>>, TError,{data: BodyType<AiSeverityInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof aiClassifySeverity>>, TError,{data: BodyType<AiSeverityInput>}, TContext> => {
+
+const mutationKey = ['aiClassifySeverity'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof aiClassifySeverity>>, {data: BodyType<AiSeverityInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  aiClassifySeverity(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AiClassifySeverityMutationResult = NonNullable<Awaited<ReturnType<typeof aiClassifySeverity>>>
+    export type AiClassifySeverityMutationBody = BodyType<AiSeverityInput>
+    export type AiClassifySeverityMutationError = ErrorType<unknown>
+
+    /**
+ * @summary AI-powered incident severity classification
+ */
+export const useAiClassifySeverity = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof aiClassifySeverity>>, TError,{data: BodyType<AiSeverityInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof aiClassifySeverity>>,
+        TError,
+        {data: BodyType<AiSeverityInput>},
+        TContext
+      > => {
+      return useMutation(getAiClassifySeverityMutationOptions(options));
+    }
+
+export const getAiVoiceChatUrl = () => {
+
+
+
+
+  return `/api/ai/voice-chat`
+}
+
+/**
+ * @summary Child voice assistant — send text message, get reassuring AI response
+ */
+export const aiVoiceChat = async (aiVoiceChatInput: AiVoiceChatInput, options?: RequestInit): Promise<AiVoiceChatResult> => {
+
+  return customFetch<AiVoiceChatResult>(getAiVoiceChatUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      aiVoiceChatInput,)
+  }
+);}
+
+
+
+
+export const getAiVoiceChatMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof aiVoiceChat>>, TError,{data: BodyType<AiVoiceChatInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof aiVoiceChat>>, TError,{data: BodyType<AiVoiceChatInput>}, TContext> => {
+
+const mutationKey = ['aiVoiceChat'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof aiVoiceChat>>, {data: BodyType<AiVoiceChatInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  aiVoiceChat(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AiVoiceChatMutationResult = NonNullable<Awaited<ReturnType<typeof aiVoiceChat>>>
+    export type AiVoiceChatMutationBody = BodyType<AiVoiceChatInput>
+    export type AiVoiceChatMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Child voice assistant — send text message, get reassuring AI response
+ */
+export const useAiVoiceChat = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof aiVoiceChat>>, TError,{data: BodyType<AiVoiceChatInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof aiVoiceChat>>,
+        TError,
+        {data: BodyType<AiVoiceChatInput>},
+        TContext
+      > => {
+      return useMutation(getAiVoiceChatMutationOptions(options));
+    }
 

@@ -12,6 +12,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   useListRouteAnalytics, getListRouteAnalyticsQueryKey,
   useListBuses, getListBusesQueryKey,
+  useSubmitCoverageRequest,
 } from "@workspace/api-client-react";
 import type { RouteAnalytic } from "@workspace/api-client-react";
 
@@ -82,6 +83,31 @@ function RouteMapSketch({ route, selected }: { route: RouteAnalytic; selected: b
 
 function RequestModal({ route, onClose }: { route: RouteAnalytic; onClose: () => void }) {
   const [submitted, setSubmitted] = useState(false);
+  const submitRequest = useSubmitCoverageRequest();
+
+  const handleSubmit = () => {
+    submitRequest.mutate(
+      {
+        data: {
+          routeAnalyticId: route.id,
+          routeName: route.routeName,
+          schoolName: route.schoolName,
+          coverageScore: route.coverageScore,
+          gapCount: route.gapCount,
+          avgAmbulanceDistanceKm: route.avgAmbulanceDistanceKm,
+          recommendedPostName: route.recommendedPostName ?? undefined,
+          projectedResponseTimeMin: route.projectedResponseTimeMin ?? undefined,
+          avgResponseTimeMin: route.avgResponseTimeMin,
+          submittedBy: "parent",
+        },
+      },
+      {
+        onSuccess: () => setSubmitted(true),
+        onError: () => setSubmitted(true),
+      }
+    );
+  };
+
   if (submitted) {
     return (
       <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
@@ -123,8 +149,12 @@ function RequestModal({ route, onClose }: { route: RouteAnalytic; onClose: () =>
         )}
         <div className="flex gap-2 pt-1">
           <Button variant="outline" onClick={onClose} className="flex-1">Cancel</Button>
-          <Button onClick={() => setSubmitted(true)} className="flex-1 bg-yellow-600 hover:bg-yellow-700 text-black font-bold">
-            Submit Request
+          <Button
+            onClick={handleSubmit}
+            disabled={submitRequest.isPending}
+            className="flex-1 bg-yellow-600 hover:bg-yellow-700 text-black font-bold"
+          >
+            {submitRequest.isPending ? "Submitting…" : "Submit Request"}
           </Button>
         </div>
       </div>

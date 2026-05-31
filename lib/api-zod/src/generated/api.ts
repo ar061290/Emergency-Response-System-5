@@ -536,3 +536,127 @@ export const ListRouteAnalyticsResponseItem = zod.object({
 export const ListRouteAnalyticsResponse = zod.array(ListRouteAnalyticsResponseItem)
 
 
+/**
+ * @summary List all police stations
+ */
+export const ListPoliceStationsResponseItem = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "district": zod.string(),
+  "latitude": zod.number(),
+  "longitude": zod.number(),
+  "address": zod.string(),
+  "phone": zod.string(),
+  "createdAt": zod.string()
+})
+export const ListPoliceStationsResponse = zod.array(ListPoliceStationsResponseItem)
+
+
+/**
+ * @summary List submitted ambulance coverage requests
+ */
+export const ListCoverageRequestsResponseItem = zod.object({
+  "id": zod.string(),
+  "routeAnalyticId": zod.string(),
+  "routeName": zod.string(),
+  "schoolName": zod.string(),
+  "coverageScore": zod.number(),
+  "gapCount": zod.number(),
+  "avgAmbulanceDistanceKm": zod.number().nullish(),
+  "recommendedPostName": zod.string().nullish(),
+  "projectedResponseTimeMin": zod.number().nullish(),
+  "avgResponseTimeMin": zod.number().nullish(),
+  "submittedBy": zod.string(),
+  "status": zod.string(),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+export const ListCoverageRequestsResponse = zod.array(ListCoverageRequestsResponseItem)
+
+
+/**
+ * @summary Submit an ambulance coverage improvement request
+ */
+export const SubmitCoverageRequestBody = zod.object({
+  "routeAnalyticId": zod.string(),
+  "routeName": zod.string(),
+  "schoolName": zod.string(),
+  "coverageScore": zod.number(),
+  "gapCount": zod.number().optional(),
+  "avgAmbulanceDistanceKm": zod.number().optional(),
+  "recommendedPostName": zod.string().optional(),
+  "projectedResponseTimeMin": zod.number().optional(),
+  "avgResponseTimeMin": zod.number().optional(),
+  "submittedBy": zod.string().optional(),
+  "notes": zod.string().optional()
+})
+
+
+/**
+ * @summary Get GPS route history for an incident (for route playback)
+ */
+export const GetIncidentGpsHistoryParams = zod.object({
+  "incidentId": zod.coerce.string()
+})
+
+export const GetIncidentGpsHistoryResponseItem = zod.object({
+  "id": zod.string(),
+  "incidentId": zod.string(),
+  "latitude": zod.number(),
+  "longitude": zod.number(),
+  "locationName": zod.string().nullish(),
+  "recordedAt": zod.string()
+})
+export const GetIncidentGpsHistoryResponse = zod.array(GetIncidentGpsHistoryResponseItem)
+
+
+/**
+ * @summary AI-powered hospital ranking for an active incident
+ */
+export const GetAiHospitalRecommendationBody = zod.object({
+  "incident": zod.record(zod.string(), zod.unknown()),
+  "hospitals": zod.array(zod.record(zod.string(), zod.unknown()))
+})
+
+export const GetAiHospitalRecommendationResponse = zod.object({
+  "rankings": zod.array(zod.record(zod.string(), zod.unknown())),
+  "aiAssessment": zod.string().nullish(),
+  "fallback": zod.boolean().nullish()
+})
+
+
+/**
+ * @summary AI-powered incident severity classification
+ */
+export const AiClassifySeverityBody = zod.object({
+  "impactMagnitude": zod.number(),
+  "heartRate": zod.number().nullish(),
+  "temperature": zod.number().nullish(),
+  "childAge": zod.number().nullish(),
+  "medicalConditions": zod.array(zod.string()).optional()
+})
+
+export const AiClassifySeverityResponse = zod.object({
+  "severity": zod.string(),
+  "confidence": zod.number(),
+  "reasoning": zod.string(),
+  "recommendImmediateDispatch": zod.boolean(),
+  "fallback": zod.boolean().nullish()
+})
+
+
+/**
+ * @summary Child voice assistant — send text message, get reassuring AI response
+ */
+export const AiVoiceChatBody = zod.object({
+  "message": zod.string(),
+  "childName": zod.string().nullish(),
+  "incidentContext": zod.string().nullish()
+})
+
+export const AiVoiceChatResponse = zod.object({
+  "reply": zod.string(),
+  "fallback": zod.boolean().nullish()
+})
+
+

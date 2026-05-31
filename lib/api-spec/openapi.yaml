@@ -29,6 +29,12 @@ tags:
     description: School bus tracking
   - name: route-analytics
     description: Route safety analytics
+  - name: police-stations
+    description: Police station directory
+  - name: coverage-requests
+    description: Ambulance coverage improvement requests
+  - name: ai
+    description: AI-powered triage and assistance
 
 paths:
   /healthz:
@@ -453,6 +459,131 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/RouteAnalytic"
+
+  /police-stations:
+    get:
+      operationId: listPoliceStations
+      tags: [police-stations]
+      summary: List all police stations
+      responses:
+        "200":
+          description: Police stations list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PoliceStation"
+
+  /coverage-requests:
+    get:
+      operationId: listCoverageRequests
+      tags: [coverage-requests]
+      summary: List submitted ambulance coverage requests
+      responses:
+        "200":
+          description: Coverage requests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CoverageRequest"
+    post:
+      operationId: submitCoverageRequest
+      tags: [coverage-requests]
+      summary: Submit an ambulance coverage improvement request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CoverageRequestInput"
+      responses:
+        "201":
+          description: Request submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CoverageRequest"
+
+  /incidents/{incidentId}/gps-history:
+    get:
+      operationId: getIncidentGpsHistory
+      tags: [incidents]
+      summary: Get GPS route history for an incident (for route playback)
+      parameters:
+        - name: incidentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: GPS waypoints ordered chronologically
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GpsPoint"
+
+  /ai/hospital-recommendation:
+    post:
+      operationId: getAiHospitalRecommendation
+      tags: [ai]
+      summary: AI-powered hospital ranking for an active incident
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AiHospitalRecommendationInput"
+      responses:
+        "200":
+          description: AI-ranked hospitals with confidence scores
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AiHospitalRecommendationResult"
+
+  /ai/classify-severity:
+    post:
+      operationId: aiClassifySeverity
+      tags: [ai]
+      summary: AI-powered incident severity classification
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AiSeverityInput"
+      responses:
+        "200":
+          description: AI severity classification
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AiSeverityResult"
+
+  /ai/voice-chat:
+    post:
+      operationId: aiVoiceChat
+      tags: [ai]
+      summary: Child voice assistant — send text message, get reassuring AI response
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AiVoiceChatInput"
+      responses:
+        "200":
+          description: AI reply
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AiVoiceChatResult"
 
 components:
   schemas:
@@ -1037,3 +1168,180 @@ components:
         lastAnalyzed:
           type: string
       required: [id, routeName, schoolName, startLocationName, endLocationName, coverageScore, avgResponseTimeMin, avgAmbulanceDistanceKm, incidentCount, totalChildrenOnRoute, gapCount, isHighRisk, lastAnalyzed]
+
+    PoliceStation:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        district:
+          type: string
+        latitude:
+          type: number
+        longitude:
+          type: number
+        address:
+          type: string
+        phone:
+          type: string
+        createdAt:
+          type: string
+      required: [id, name, district, latitude, longitude, address, phone, createdAt]
+
+    CoverageRequest:
+      type: object
+      properties:
+        id:
+          type: string
+        routeAnalyticId:
+          type: string
+        routeName:
+          type: string
+        schoolName:
+          type: string
+        coverageScore:
+          type: number
+        gapCount:
+          type: integer
+        avgAmbulanceDistanceKm:
+          type: ["number", "null"]
+        recommendedPostName:
+          type: ["string", "null"]
+        projectedResponseTimeMin:
+          type: ["integer", "null"]
+        avgResponseTimeMin:
+          type: ["integer", "null"]
+        submittedBy:
+          type: string
+        status:
+          type: string
+        notes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+      required: [id, routeAnalyticId, routeName, schoolName, coverageScore, gapCount, submittedBy, status, createdAt]
+
+    CoverageRequestInput:
+      type: object
+      properties:
+        routeAnalyticId:
+          type: string
+        routeName:
+          type: string
+        schoolName:
+          type: string
+        coverageScore:
+          type: number
+        gapCount:
+          type: integer
+        avgAmbulanceDistanceKm:
+          type: number
+        recommendedPostName:
+          type: string
+        projectedResponseTimeMin:
+          type: integer
+        avgResponseTimeMin:
+          type: integer
+        submittedBy:
+          type: string
+        notes:
+          type: string
+      required: [routeAnalyticId, routeName, schoolName, coverageScore]
+
+    GpsPoint:
+      type: object
+      properties:
+        id:
+          type: string
+        incidentId:
+          type: string
+        latitude:
+          type: number
+        longitude:
+          type: number
+        locationName:
+          type: ["string", "null"]
+        recordedAt:
+          type: string
+      required: [id, incidentId, latitude, longitude, recordedAt]
+
+    AiHospitalRecommendationInput:
+      type: object
+      properties:
+        incident:
+          type: object
+          additionalProperties: true
+        hospitals:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+      required: [incident, hospitals]
+
+    AiHospitalRecommendationResult:
+      type: object
+      properties:
+        rankings:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        aiAssessment:
+          type: ["string", "null"]
+        fallback:
+          type: ["boolean", "null"]
+      required: [rankings]
+
+    AiSeverityInput:
+      type: object
+      properties:
+        impactMagnitude:
+          type: number
+        heartRate:
+          type: ["integer", "null"]
+        temperature:
+          type: ["number", "null"]
+        childAge:
+          type: ["integer", "null"]
+        medicalConditions:
+          type: array
+          items:
+            type: string
+      required: [impactMagnitude]
+
+    AiSeverityResult:
+      type: object
+      properties:
+        severity:
+          type: string
+        confidence:
+          type: number
+        reasoning:
+          type: string
+        recommendImmediateDispatch:
+          type: boolean
+        fallback:
+          type: ["boolean", "null"]
+      required: [severity, confidence, reasoning, recommendImmediateDispatch]
+
+    AiVoiceChatInput:
+      type: object
+      properties:
+        message:
+          type: string
+        childName:
+          type: ["string", "null"]
+        incidentContext:
+          type: ["string", "null"]
+      required: [message]
+
+    AiVoiceChatResult:
+      type: object
+      properties:
+        reply:
+          type: string
+        fallback:
+          type: ["boolean", "null"]
+      required: [reply]

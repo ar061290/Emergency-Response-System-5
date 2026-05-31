@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Link } from "wouter";
-import { ArrowLeft, Phone, MapPin, AlertTriangle, CheckCircle, Heart, Thermometer, Clock, Shield } from "lucide-react";
+import { ArrowLeft, Phone, MapPin, AlertTriangle, CheckCircle, Heart, Thermometer, Clock, Shield, Mic, MicOff, MessageCircle, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   useGetActiveIncidents,
@@ -9,6 +9,7 @@ import {
   getGetIncidentVitalsQueryKey,
   useListMessages,
   getListMessagesQueryKey,
+  useAiVoiceChat,
 } from "@workspace/api-client-react";
 
 type WatchState = "normal" | "impact" | "confirmed" | "pain_report" | "help_coming";
@@ -28,6 +29,10 @@ export default function ChildWatchPage() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [painPart, setPainPart] = useState<string | null>(null);
   const [painLevel, setPainLevel] = useState<number | null>(null);
+  const [voiceOpen, setVoiceOpen] = useState(false);
+  const [voiceInput, setVoiceInput] = useState("");
+  const [aiReply, setAiReply] = useState<string | null>(null);
+  const voiceChat = useAiVoiceChat();
 
   const { data: incidents } = useGetActiveIncidents({
     query: { refetchInterval: 3000, queryKey: getGetActiveIncidentsQueryKey() },
@@ -325,6 +330,85 @@ export default function ChildWatchPage() {
                     <div className="text-blue-300 text-xs leading-relaxed">{reassuranceMsg.content}</div>
                   </motion.div>
                 )}
+
+                {/* AI Voice Assistant button */}
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setVoiceOpen(true)}
+                  className="mt-3 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-purple-900/40 border border-purple-600/50 text-purple-300 text-xs font-medium hover:bg-purple-900/60 transition-colors"
+                  data-testid="button-voice-assistant"
+                >
+                  <MessageCircle size={13} />
+                  Talk to AI Assistant
+                </motion.button>
+
+                {/* Voice assistant panel */}
+                <AnimatePresence>
+                  {voiceOpen && (
+                    <motion.div
+                      key="voicePanel"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      className="mt-2 w-full bg-slate-900 border border-purple-600/40 rounded-xl p-3"
+                      data-testid="voice-assistant-panel"
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-purple-300 text-xs font-semibold">AI Assistant</span>
+                        <button onClick={() => setVoiceOpen(false)} className="text-slate-500 hover:text-white">
+                          <X size={12} />
+                        </button>
+                      </div>
+                      {aiReply && (
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          className="mb-2 bg-blue-900/30 border border-blue-700/30 rounded-lg px-2.5 py-2"
+                          data-testid="ai-reply"
+                        >
+                          <div className="text-blue-200 text-xs leading-relaxed">{aiReply}</div>
+                        </motion.div>
+                      )}
+                      <div className="flex gap-1.5">
+                        <input
+                          type="text"
+                          value={voiceInput}
+                          onChange={(e) => setVoiceInput(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" && voiceInput.trim()) {
+                              const msg = voiceInput.trim();
+                              setVoiceInput("");
+                              voiceChat.mutate(
+                                { data: { message: msg, childName: activeIncident?.childName ?? undefined } },
+                                { onSuccess: (d) => setAiReply(d.reply) }
+                              );
+                            }
+                          }}
+                          placeholder="Tell me where it hurts…"
+                          className="flex-1 bg-slate-800 border border-slate-700 rounded-lg text-xs text-white px-2 py-1.5 outline-none focus:border-purple-500"
+                          data-testid="input-voice-chat"
+                        />
+                        <motion.button
+                          whileTap={{ scale: 0.9 }}
+                          onClick={() => {
+                            if (!voiceInput.trim()) return;
+                            const msg = voiceInput.trim();
+                            setVoiceInput("");
+                            voiceChat.mutate(
+                              { data: { message: msg, childName: activeIncident?.childName ?? undefined } },
+                              { onSuccess: (d) => setAiReply(d.reply) }
+                            );
+                          }}
+                          disabled={voiceChat.isPending || !voiceInput.trim()}
+                          className="bg-purple-700 hover:bg-purple-600 disabled:opacity-40 text-white rounded-lg px-2.5 py-1.5 text-xs font-bold"
+                          data-testid="button-send-voice"
+                        >
+                          {voiceChat.isPending ? "…" : "Send"}
+                        </motion.button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </motion.div>
             )}
 

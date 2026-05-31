@@ -326,6 +326,116 @@ export interface RouteAnalytic {
   lastAnalyzed: string;
 }
 
+export interface PoliceStation {
+  id: string;
+  name: string;
+  district: string;
+  latitude: number;
+  longitude: number;
+  address: string;
+  phone: string;
+  createdAt: string;
+}
+
+export interface CoverageRequest {
+  id: string;
+  routeAnalyticId: string;
+  routeName: string;
+  schoolName: string;
+  coverageScore: number;
+  gapCount: number;
+  /** @nullable */
+  avgAmbulanceDistanceKm?: number | null;
+  /** @nullable */
+  recommendedPostName?: string | null;
+  /** @nullable */
+  projectedResponseTimeMin?: number | null;
+  /** @nullable */
+  avgResponseTimeMin?: number | null;
+  submittedBy: string;
+  status: string;
+  /** @nullable */
+  notes?: string | null;
+  createdAt: string;
+}
+
+export interface CoverageRequestInput {
+  routeAnalyticId: string;
+  routeName: string;
+  schoolName: string;
+  coverageScore: number;
+  gapCount?: number;
+  avgAmbulanceDistanceKm?: number;
+  recommendedPostName?: string;
+  projectedResponseTimeMin?: number;
+  avgResponseTimeMin?: number;
+  submittedBy?: string;
+  notes?: string;
+}
+
+export interface GpsPoint {
+  id: string;
+  incidentId: string;
+  latitude: number;
+  longitude: number;
+  /** @nullable */
+  locationName?: string | null;
+  recordedAt: string;
+}
+
+export type AiHospitalRecommendationInputIncident = { [key: string]: unknown };
+
+export type AiHospitalRecommendationInputHospitalsItem = { [key: string]: unknown };
+
+export interface AiHospitalRecommendationInput {
+  incident: AiHospitalRecommendationInputIncident;
+  hospitals: AiHospitalRecommendationInputHospitalsItem[];
+}
+
+export type AiHospitalRecommendationResultRankingsItem = { [key: string]: unknown };
+
+export interface AiHospitalRecommendationResult {
+  rankings: AiHospitalRecommendationResultRankingsItem[];
+  /** @nullable */
+  aiAssessment?: string | null;
+  /** @nullable */
+  fallback?: boolean | null;
+}
+
+export interface AiSeverityInput {
+  impactMagnitude: number;
+  /** @nullable */
+  heartRate?: number | null;
+  /** @nullable */
+  temperature?: number | null;
+  /** @nullable */
+  childAge?: number | null;
+  medicalConditions?: string[];
+}
+
+export interface AiSeverityResult {
+  severity: string;
+  confidence: number;
+  reasoning: string;
+  recommendImmediateDispatch: boolean;
+  /** @nullable */
+  fallback?: boolean | null;
+}
+
+export interface AiVoiceChatInput {
+  message: string;
+  /** @nullable */
+  childName?: string | null;
+  /** @nullable */
+  incidentContext?: string | null;
+}
+
+export interface AiVoiceChatResult {
+  reply: string;
+  /** @nullable */
+  fallback?: boolean | null;
+}
+
 export type ListIncidentsParams = {
 status?: string;
 limit?: number;

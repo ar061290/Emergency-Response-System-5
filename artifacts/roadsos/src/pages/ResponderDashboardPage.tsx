@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import {
   ArrowLeft, AlertTriangle, Activity, Heart, Thermometer, Building2,
@@ -19,6 +19,7 @@ import {
   useListHospitals, getListHospitalsQueryKey,
   useGetChild, getGetChildQueryKey,
   useUpdateIncidentStatus,
+  useGetAiHospitalRecommendation,
 } from "@workspace/api-client-react";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
@@ -95,6 +96,9 @@ function StatusStepper({ currentStatus }: { currentStatus: string }) {
 
 export default function ResponderDashboardPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [aiRankings, setAiRankings] = useState<Record<string, number>>({});
+  const [aiAssessment, setAiAssessment] = useState<string | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
   const { toast } = useToast();
 
   const { data: activeIncidents, isLoading } = useGetActiveIncidents({
@@ -120,13 +124,65 @@ export default function ResponderDashboardPage() {
     query: { enabled: !!incident?.childId, queryKey: getGetChildQueryKey(incident?.childId ?? "") },
   });
 
+  const aiRecommendation = useGetAiHospitalRecommendation();
+
   const updateStatus = useUpdateIncidentStatus();
 
   const latestVitals = vitals?.[0];
   const vitalsHistory = [...(vitals ?? [])].reverse();
   const heartRateData = vitalsHistory.map((v) => ({ bpm: v.heartRate }));
-  const topHospital = hospitals?.[0];
   const summary = activeIncidents?.find((i) => i.incidentId === incidentId);
+
+  const topHospital = hospitals?.map((h) => ({
+    ...h,
+    confidenceScore: aiRankings[h.id] ?? null,
+  }))[0] ?? null;
+
+  useEffect(() => {
+    if (!incident || !hospitals?.length || aiLoading || Object.keys(aiRankings).length > 0) return;
+    setAiLoading(true);
+    aiRecommendation.mutate(
+      {
+        data: {
+          incident: {
+            severity: incident.severity,
+            heartRate: incident.heartRate ?? undefined,
+            temperature: incident.temperature ?? undefined,
+            impactMagnitude: incident.impactMagnitude ?? undefined,
+            childAge: incident.childAge,
+            medicalConditions: child?.medicalConditions ?? [],
+            allergies: child?.allergies ?? [],
+          },
+          hospitals: hospitals.map((h) => ({
+            id: h.id,
+            name: h.name,
+            type: h.type,
+            traumaBeds: h.traumaBeds,
+            icuBeds: h.icuBeds,
+            hasPediatricTeam: h.hasPediatricTeam,
+            hasTraumaSurgery: h.hasTraumaSurgery,
+            hasCTScan: h.hasCTScan,
+            rating: h.rating ?? 4.0,
+            distanceKm: (h as { distanceKm?: number }).distanceKm,
+            etaMinutes: (h as { etaMinutes?: number }).etaMinutes,
+          })),
+        },
+      },
+      {
+        onSuccess: (data) => {
+          const rankMap: Record<string, number> = {};
+          (data.rankings ?? []).forEach((r: { id: string; confidenceScore: number }) => {
+            rankMap[r.id] = r.confidenceScore;
+          });
+          setAiRankings(rankMap);
+          setAiAssessment((data as { aiAssessment?: string }).aiAssessment ?? null);
+          setAiLoading(false);
+        },
+        onError: () => setAiLoading(false),
+      }
+    );
+  }, [incidentId, hospitals?.length, child]);
+
 
   const handleStatusUpdate = (newStatus: string) => {
     if (!incidentId) return;

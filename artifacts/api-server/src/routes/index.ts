@@ -11,6 +11,10 @@ import sensorRouter from "./sensor";
 import dashboardRouter from "./dashboard";
 import busesRouter from "./buses";
 import routeAnalyticsRouter from "./route_analytics";
+import policeStationsRouter from "./police_stations";
+import coverageRequestsRouter from "./coverage_requests";
+import gpsHistoryRouter from "./gps_history";
+import aiTriageRouter from "./ai_triage";
 
 const router: IRouter = Router();
 
@@ -26,5 +30,9 @@ router.use(sensorRouter);
 router.use(dashboardRouter);
 router.use(busesRouter);
 router.use(routeAnalyticsRouter);
+router.use(policeStationsRouter);
+router.use(coverageRequestsRouter);
+router.use(gpsHistoryRouter);
+router.use(aiTriageRouter);
 
 export default router;

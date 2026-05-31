@@ -2,7 +2,8 @@ import { useState } from "react";
 import { Link } from "wouter";
 import {
   ArrowLeft, AlertTriangle, CheckCircle, Clock, MapPin, Ambulance, Heart,
-  Thermometer, Building2, Phone, Send, Activity, ChevronRight, User, Bus
+  Thermometer, Building2, Phone, Send, Activity, ChevronRight, User, Bus,
+  Play, Pause, Shield, Stethoscope
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,6 +22,8 @@ import {
   useListBuses, getListBusesQueryKey,
   useListAmbulances, getListAmbulancesQueryKey,
   useListHospitals, getListHospitalsQueryKey,
+  useListPoliceStations, getListPoliceStationsQueryKey,
+  useGetIncidentGpsHistory, getGetIncidentGpsHistoryQueryKey,
 } from "@workspace/api-client-react";
 import LiveMap from "@/components/LiveMap";
 import { useToast } from "@/hooks/use-toast";
@@ -50,6 +53,8 @@ function StatusBadge({ status }: { status: string }) {
 export default function ParentDashboardPage() {
   const [selectedIncidentId, setSelectedIncidentId] = useState<string | null>(null);
   const [msgInput, setMsgInput] = useState("");
+  const [showPolice, setShowPolice] = useState(true);
+  const [showRoutePlayback, setShowRoutePlayback] = useState(false);
   const { toast } = useToast();
 
   const { data: activeIncidents, isLoading: loadingIncidents } = useGetActiveIncidents({
@@ -90,6 +95,18 @@ export default function ParentDashboardPage() {
     query: { enabled: !!incident?.latitude, queryKey: getListHospitalsQueryKey() },
   });
   const matchedHospital = hospitals?.find((h) => incident?.hospitalId === h.id) ?? hospitals?.[0];
+
+  const traumaCenters = hospitals?.filter((h) => h.hasTraumaSurgery) ?? [];
+
+  const { data: policeStations } = useListPoliceStations({
+    query: { queryKey: getListPoliceStationsQueryKey(), staleTime: 60000 },
+  });
+
+  const { data: gpsHistory } = useGetIncidentGpsHistory(incidentId, {
+    query: { enabled: !!incidentId, queryKey: getGetIncidentGpsHistoryQueryKey(incidentId), refetchInterval: 10000 },
+  });
+
+  const routeHistory: [number, number][] = gpsHistory?.map((p) => [p.latitude, p.longitude]) ?? [];
 
   const latestVitals = vitals?.[0];
   const elapsedMin = activeIncidents?.find((i) => i.incidentId === incidentId)?.elapsedMinutes;
@@ -251,6 +268,24 @@ export default function ParentDashboardPage() {
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm flex items-center gap-2">
                       <MapPin size={14} className="text-blue-400" /> Live Location
+                      <div className="ml-auto flex items-center gap-2">
+                        <button
+                          onClick={() => setShowPolice((v) => !v)}
+                          className={`flex items-center gap-1 text-xs px-2 py-1 rounded-lg border transition-colors ${showPolice ? "bg-indigo-900/40 border-indigo-600/50 text-indigo-300" : "bg-slate-800 border-slate-700 text-slate-500"}`}
+                          title="Toggle police stations"
+                        >
+                          <Shield size={11} /> Police
+                        </button>
+                        {routeHistory.length > 1 && (
+                          <button
+                            onClick={() => setShowRoutePlayback((v) => !v)}
+                            className={`flex items-center gap-1 text-xs px-2 py-1 rounded-lg border transition-colors ${showRoutePlayback ? "bg-yellow-900/40 border-yellow-600/50 text-yellow-300" : "bg-slate-800 border-slate-700 text-slate-500"}`}
+                            title="Toggle route history"
+                          >
+                            {showRoutePlayback ? <Pause size={11} /> : <Play size={11} />} Route
+                          </button>
+                        )}
+                      </div>
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="p-0">
@@ -264,8 +299,19 @@ export default function ParentDashboardPage() {
                       hospitalLat={matchedHospital?.latitude ?? null}
                       hospitalLon={matchedHospital?.longitude ?? null}
                       hospitalName={matchedHospital?.name ?? incident?.hospitalName}
+                      hospitalIsTrauma={matchedHospital?.hasTraumaSurgery ?? false}
                       bus={activeBus}
                       incidentStatus={incident?.status}
+                      policeStations={showPolice ? policeStations ?? [] : []}
+                      traumaCenters={traumaCenters.map((tc) => ({
+                        id: tc.id,
+                        name: tc.name,
+                        latitude: tc.latitude,
+                        longitude: tc.longitude,
+                        type: tc.type,
+                      }))}
+                      routeHistory={routeHistory}
+                      showRoutePlayback={showRoutePlayback}
                     />
                   </CardContent>
                 </Card>
@@ -331,6 +377,37 @@ export default function ParentDashboardPage() {
                   </CardContent>
                 </Card>
               </div>
+
+              {/* Trauma Centers */}
+              {traumaCenters.length > 0 && (
+                <Card className="bg-card border-border" data-testid="card-trauma-centers">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <Stethoscope size={14} className="text-red-400" /> Trauma Centers — Level I/II
+                      <span className="ml-auto text-xs text-muted-foreground font-normal">{traumaCenters.length} facilities</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {traumaCenters.map((tc, i) => (
+                        <div key={tc.id} className={`rounded-lg p-3 space-y-1 border ${i === 0 && matchedHospital?.id === tc.id ? "bg-red-900/20 border-red-700/50" : "bg-slate-800/40 border-slate-700/30"}`}>
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="font-semibold text-xs leading-tight">{tc.name}</div>
+                            {i === 0 && matchedHospital?.id === tc.id && (
+                              <span className="text-xs bg-red-900/40 text-red-300 border border-red-700/50 rounded-full px-1.5 py-0.5 whitespace-nowrap">Active</span>
+                            )}
+                          </div>
+                          <div className="text-xs text-muted-foreground">{tc.type}</div>
+                          <div className="flex items-center gap-2 text-xs">
+                            <span className="text-red-400 font-medium">{tc.traumaBeds} trauma beds</span>
+                            {tc.hasPediatricTeam && <span className="text-green-400">· Pediatric ✓</span>}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Timeline + Messages row */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
