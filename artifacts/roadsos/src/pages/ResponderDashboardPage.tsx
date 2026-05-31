@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
 import {
   ArrowLeft, AlertTriangle, Activity, Heart, Thermometer, Building2,
@@ -100,6 +101,29 @@ export default function ResponderDashboardPage() {
   const [aiAssessment, setAiAssessment] = useState<string | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const source = new EventSource("/api/events");
+    source.addEventListener("incident:created", (e) => {
+      try {
+        const data = JSON.parse(e.data);
+        queryClient.invalidateQueries({ queryKey: getGetActiveIncidentsQueryKey() });
+        toast({ title: "🚨 New Incident", description: `${data.childName ?? "Child"} — ${data.severity ?? ""} severity`, duration: 8000 });
+      } catch { /* ignore */ }
+    });
+    source.addEventListener("incident:updated", () => {
+      queryClient.invalidateQueries({ queryKey: getGetActiveIncidentsQueryKey() });
+    });
+    source.addEventListener("vitals:new", (e) => {
+      try {
+        const data = JSON.parse(e.data);
+        if (data.incidentId) queryClient.invalidateQueries({ queryKey: getGetIncidentVitalsQueryKey(data.incidentId) });
+      } catch { /* ignore */ }
+    });
+    source.onerror = () => source.close();
+    return () => source.close();
+  }, [queryClient, toast]);
 
   const { data: activeIncidents, isLoading } = useGetActiveIncidents({
     query: { refetchInterval: 3000, queryKey: getGetActiveIncidentsQueryKey() },

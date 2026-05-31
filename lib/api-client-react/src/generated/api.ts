@@ -34,6 +34,7 @@ import type {
   CoverageRequest,
   CoverageRequestInput,
   DashboardSummary,
+  GetNearestAmbulanceParams,
   GpsPoint,
   HealthStatus,
   Hospital,
@@ -46,6 +47,7 @@ import type {
   LocationUpdate,
   Message,
   MessageInput,
+  NearestAmbulanceResult,
   PoliceStation,
   RouteAnalytic,
   SchoolBus,
@@ -972,6 +974,90 @@ export function useListAmbulances<TData = Awaited<ReturnType<typeof listAmbulanc
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getListAmbulancesQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetNearestAmbulanceUrl = (params: GetNearestAmbulanceParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/ambulances/nearest?${stringifiedParams}` : `/api/ambulances/nearest`
+}
+
+/**
+ * @summary Find nearest available ambulance with ETA
+ */
+export const getNearestAmbulance = async (params: GetNearestAmbulanceParams, options?: RequestInit): Promise<NearestAmbulanceResult> => {
+
+  return customFetch<NearestAmbulanceResult>(getGetNearestAmbulanceUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetNearestAmbulanceQueryKey = (params?: GetNearestAmbulanceParams,) => {
+    return [
+    `/api/ambulances/nearest`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetNearestAmbulanceQueryOptions = <TData = Awaited<ReturnType<typeof getNearestAmbulance>>, TError = ErrorType<void>>(params: GetNearestAmbulanceParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getNearestAmbulance>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetNearestAmbulanceQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getNearestAmbulance>>> = ({ signal }) => getNearestAmbulance(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getNearestAmbulance>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetNearestAmbulanceQueryResult = NonNullable<Awaited<ReturnType<typeof getNearestAmbulance>>>
+export type GetNearestAmbulanceQueryError = ErrorType<void>
+
+
+/**
+ * @summary Find nearest available ambulance with ETA
+ */
+
+export function useGetNearestAmbulance<TData = Awaited<ReturnType<typeof getNearestAmbulance>>, TError = ErrorType<void>>(
+ params: GetNearestAmbulanceParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getNearestAmbulance>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetNearestAmbulanceQueryOptions(params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

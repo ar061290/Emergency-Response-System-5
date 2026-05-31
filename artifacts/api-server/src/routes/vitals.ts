@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { db, vitalsTable, incidentsTable, insertVitalsSchema } from "@workspace/db";
 import { eq, desc } from "drizzle-orm";
+import { broadcast } from "../lib/sseClients";
 
 const router = Router();
 
@@ -37,6 +38,12 @@ router.post("/incidents/:incidentId/vitals", async (req, res) => {
         updatedAt: new Date(),
       })
       .where(eq(incidentsTable.id, req.params.incidentId));
+    broadcast("vitals:new", {
+      incidentId: req.params.incidentId,
+      heartRate: parsed.data.heartRate,
+      temperature: parsed.data.temperature,
+      confidence: parsed.data.confidence,
+    });
     res.status(201).json(vitals);
   } catch (err) {
     req.log.error(err);

@@ -267,6 +267,32 @@ paths:
                 items:
                   $ref: "#/components/schemas/Ambulance"
 
+  /ambulances/nearest:
+    get:
+      operationId: getNearestAmbulance
+      tags: [ambulances]
+      summary: Find nearest available ambulance with ETA
+      parameters:
+        - name: lat
+          in: query
+          required: true
+          schema:
+            type: number
+        - name: lon
+          in: query
+          required: true
+          schema:
+            type: number
+      responses:
+        "200":
+          description: Nearest ambulance with routing info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NearestAmbulanceResult"
+        "404":
+          description: No available ambulances
+
   /ambulances/{ambulanceId}/location:
     patch:
       operationId: updateAmbulanceLocation
@@ -1249,6 +1275,24 @@ components:
         notes:
           type: string
       required: [routeAnalyticId, routeName, schoolName, coverageScore]
+
+    NearestAmbulanceResult:
+      type: object
+      properties:
+        ambulance:
+          $ref: "#/components/schemas/Ambulance"
+        distanceKm:
+          type: number
+        etaMinutes:
+          type: number
+        bearing:
+          type: number
+        allAmbulances:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+      required: [ambulance, distanceKm, etaMinutes]
 
     GpsPoint:
       type: object

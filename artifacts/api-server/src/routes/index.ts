@@ -15,9 +15,11 @@ import policeStationsRouter from "./police_stations";
 import coverageRequestsRouter from "./coverage_requests";
 import gpsHistoryRouter from "./gps_history";
 import aiTriageRouter from "./ai_triage";
+import sseRouter from "./sse";
 
 const router: IRouter = Router();
 
+router.use(sseRouter);
 router.use(healthRouter);
 router.use(childrenRouter);
 router.use(hospitalsRouter);

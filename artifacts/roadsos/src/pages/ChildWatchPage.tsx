@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Link } from "wouter";
-import { ArrowLeft, Phone, MapPin, AlertTriangle, CheckCircle, Heart, Thermometer, Clock, Shield, Mic, MicOff, MessageCircle, X } from "lucide-react";
+import { ArrowLeft, Phone, MapPin, AlertTriangle, CheckCircle, Heart, Thermometer, Clock, Shield, Mic, MicOff, MessageCircle, X, Zap } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   useGetActiveIncidents,
@@ -23,6 +23,17 @@ const BODY_PARTS = [
   { id: "back",    label: "Back",    emoji: "🔙" },
 ];
 
+type SpeechRecognitionType = {
+  lang: string;
+  continuous: boolean;
+  interimResults: boolean;
+  onresult: ((e: { results: { [k: number]: { [k: number]: { transcript: string } } } }) => void) | null;
+  onerror: (() => void) | null;
+  onend: (() => void) | null;
+  start: () => void;
+  stop: () => void;
+};
+
 export default function ChildWatchPage() {
   const [watchState, setWatchState] = useState<WatchState>("normal");
   const [etaSeconds, setEtaSeconds] = useState<number>(240);
@@ -32,7 +43,61 @@ export default function ChildWatchPage() {
   const [voiceOpen, setVoiceOpen] = useState(false);
   const [voiceInput, setVoiceInput] = useState("");
   const [aiReply, setAiReply] = useState<string | null>(null);
+  const [isListening, setIsListening] = useState(false);
+  const [sensorSimLoading, setSensorSimLoading] = useState(false);
+  const recognitionRef = useRef<SpeechRecognitionType | null>(null);
   const voiceChat = useAiVoiceChat();
+
+  const startListening = useCallback(() => {
+    const SR =
+      (window as unknown as { SpeechRecognition?: new () => SpeechRecognitionType }).SpeechRecognition ??
+      (window as unknown as { webkitSpeechRecognition?: new () => SpeechRecognitionType }).webkitSpeechRecognition;
+    if (!SR) return;
+    const rec = new SR();
+    rec.lang = "en-US";
+    rec.continuous = false;
+    rec.interimResults = false;
+    rec.onresult = (e) => {
+      setVoiceInput(e.results[0][0].transcript);
+      setIsListening(false);
+    };
+    rec.onerror = () => setIsListening(false);
+    rec.onend = () => setIsListening(false);
+    recognitionRef.current = rec;
+    rec.start();
+    setIsListening(true);
+  }, []);
+
+  const stopListening = useCallback(() => {
+    recognitionRef.current?.stop();
+    setIsListening(false);
+  }, []);
+
+  const simulateSensorImpact = useCallback(async () => {
+    setSensorSimLoading(true);
+    try {
+      await fetch("/api/innerwear/sensor-data", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          deviceId: "innerwear_dev_001",
+          accelerometerX: 52.4,
+          accelerometerY: 38.6,
+          accelerometerZ: 12.1,
+          heartRate: 118,
+          temperature: 37.4,
+          latitude: 33.749,
+          longitude: -84.388,
+          timestamp: new Date().toISOString(),
+        }),
+      });
+      setWatchState("impact");
+    } catch {
+      setWatchState("impact");
+    } finally {
+      setSensorSimLoading(false);
+    }
+  }, []);
 
   const { data: incidents } = useGetActiveIncidents({
     query: { refetchInterval: 3000, queryKey: getGetActiveIncidentsQueryKey() },
@@ -370,6 +435,19 @@ export default function ChildWatchPage() {
                         </motion.div>
                       )}
                       <div className="flex gap-1.5">
+                        <motion.button
+                          whileTap={{ scale: 0.9 }}
+                          onClick={isListening ? stopListening : startListening}
+                          className={`rounded-lg p-1.5 border text-xs transition-colors ${
+                            isListening
+                              ? "bg-red-700 border-red-500 text-white animate-pulse"
+                              : "bg-slate-700 border-slate-600 text-slate-300 hover:bg-slate-600"
+                          }`}
+                          title={isListening ? "Stop recording" : "Speak (Chrome)"}
+                          data-testid="button-mic"
+                        >
+                          {isListening ? <MicOff size={13} /> : <Mic size={13} />}
+                        </motion.button>
                         <input
                           type="text"
                           value={voiceInput}
@@ -384,7 +462,7 @@ export default function ChildWatchPage() {
                               );
                             }
                           }}
-                          placeholder="Tell me where it hurts…"
+                          placeholder={isListening ? "Listening…" : "Tell me where it hurts…"}
                           className="flex-1 bg-slate-800 border border-slate-700 rounded-lg text-xs text-white px-2 py-1.5 outline-none focus:border-purple-500"
                           data-testid="input-voice-chat"
                         />
@@ -428,7 +506,7 @@ export default function ChildWatchPage() {
       {/* Demo controls */}
       <div className="mt-6 w-full max-w-sm">
         <div className="text-slate-600 text-xs uppercase tracking-widest text-center mb-3">Simulate</div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 mb-2">
           <button onClick={() => { setWatchState("impact"); setPainPart(null); setPainLevel(null); }}
             className="flex-1 py-2 rounded-xl bg-red-900/30 border border-red-800/50 text-red-400 text-sm hover:bg-red-900/50 transition-colors"
             data-testid="button-sim-impact">
@@ -450,6 +528,15 @@ export default function ChildWatchPage() {
             Normal
           </button>
         </div>
+        <button
+          onClick={simulateSensorImpact}
+          disabled={sensorSimLoading}
+          className="w-full py-2.5 rounded-xl bg-yellow-900/30 border border-yellow-700/50 text-yellow-400 text-sm font-medium hover:bg-yellow-900/50 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+          data-testid="button-sim-sensor-api"
+        >
+          <Zap size={13} />
+          {sensorSimLoading ? "Sending to sensor API…" : "Fire Sensor Pipeline (9.2g → API → Incident)"}
+        </button>
       </div>
     </div>
   );

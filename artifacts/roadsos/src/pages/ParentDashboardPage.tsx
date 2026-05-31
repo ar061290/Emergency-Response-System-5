@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
 import {
   ArrowLeft, AlertTriangle, CheckCircle, Clock, MapPin, Ambulance, Heart,
@@ -55,7 +56,51 @@ export default function ParentDashboardPage() {
   const [msgInput, setMsgInput] = useState("");
   const [showPolice, setShowPolice] = useState(true);
   const [showRoutePlayback, setShowRoutePlayback] = useState(false);
+  const [notifGranted, setNotifGranted] = useState(
+    typeof Notification !== "undefined" ? Notification.permission === "granted" : false,
+  );
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const source = new EventSource("/api/events");
+
+    source.addEventListener("incident:created", (e) => {
+      try {
+        const data = JSON.parse(e.data);
+        queryClient.invalidateQueries({ queryKey: getGetActiveIncidentsQueryKey() });
+        toast({
+          title: "🚨 New Incident",
+          description: `${data.childName ?? "A child"} needs emergency help`,
+          duration: 8000,
+        });
+        if (notifGranted && typeof Notification !== "undefined") {
+          new Notification("New Emergency Incident", {
+            body: `${data.childName ?? "Child"} — ${data.severity ?? "unknown"} severity`,
+          });
+        }
+      } catch { /* ignore parse errors */ }
+    });
+
+    source.addEventListener("incident:updated", () => {
+      queryClient.invalidateQueries({ queryKey: getGetActiveIncidentsQueryKey() });
+    });
+
+    source.addEventListener("vitals:new", (e) => {
+      try {
+        const data = JSON.parse(e.data);
+        if (data.incidentId) {
+          queryClient.invalidateQueries({ queryKey: getGetIncidentVitalsQueryKey(data.incidentId) });
+        }
+      } catch { /* ignore */ }
+    });
+
+    source.onerror = () => {
+      source.close();
+    };
+
+    return () => source.close();
+  }, [notifGranted, queryClient, toast]);
 
   const { data: activeIncidents, isLoading: loadingIncidents } = useGetActiveIncidents({
     query: { refetchInterval: 3000, queryKey: getGetActiveIncidentsQueryKey() },
@@ -146,6 +191,15 @@ export default function ParentDashboardPage() {
           <span className="font-bold text-base">Parent Command Center</span>
         </div>
         <div className="ml-auto flex items-center gap-2">
+          {!notifGranted && typeof Notification !== "undefined" && Notification.permission !== "denied" && (
+            <button
+              onClick={() => Notification.requestPermission().then((p) => setNotifGranted(p === "granted"))}
+              className="text-xs px-2.5 py-1 rounded-lg bg-yellow-900/30 border border-yellow-700/50 text-yellow-400 hover:bg-yellow-900/50 transition-colors"
+              title="Allow browser alerts for new incidents"
+            >
+              Enable Alerts
+            </button>
+          )}
           {activeIncidents && activeIncidents.length > 0 && (
             <Badge className="bg-red-900/50 text-red-300 border-red-700 animate-pulse">
               {activeIncidents.length} active

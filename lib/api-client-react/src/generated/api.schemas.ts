@@ -373,6 +373,16 @@ export interface CoverageRequestInput {
   notes?: string;
 }
 
+export type NearestAmbulanceResultAllAmbulancesItem = { [key: string]: unknown };
+
+export interface NearestAmbulanceResult {
+  ambulance: Ambulance;
+  distanceKm: number;
+  etaMinutes: number;
+  bearing?: number;
+  allAmbulances?: NearestAmbulanceResultAllAmbulancesItem[];
+}
+
 export interface GpsPoint {
   id: string;
   incidentId: string;
@@ -444,6 +454,11 @@ limit?: number;
 export type ListHospitalsParams = {
 lat?: number;
 lng?: number;
+};
+
+export type GetNearestAmbulanceParams = {
+lat: number;
+lon: number;
 };
 
 export type ListBusesParams = {

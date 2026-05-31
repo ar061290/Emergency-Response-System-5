@@ -310,6 +310,34 @@ export const ListAmbulancesResponse = zod.array(ListAmbulancesResponseItem)
 
 
 /**
+ * @summary Find nearest available ambulance with ETA
+ */
+export const GetNearestAmbulanceQueryParams = zod.object({
+  "lat": zod.coerce.number(),
+  "lon": zod.coerce.number()
+})
+
+export const GetNearestAmbulanceResponse = zod.object({
+  "ambulance": zod.object({
+  "id": zod.string(),
+  "unitNumber": zod.string(),
+  "driverName": zod.string(),
+  "driverPhone": zod.string(),
+  "status": zod.string(),
+  "latitude": zod.number(),
+  "longitude": zod.number(),
+  "speedKmh": zod.number().nullish(),
+  "assignedIncidentId": zod.string().nullish(),
+  "updatedAt": zod.string()
+}),
+  "distanceKm": zod.number(),
+  "etaMinutes": zod.number(),
+  "bearing": zod.number().optional(),
+  "allAmbulances": zod.array(zod.record(zod.string(), zod.unknown())).optional()
+})
+
+
+/**
  * @summary Update ambulance GPS location
  */
 export const UpdateAmbulanceLocationParams = zod.object({
