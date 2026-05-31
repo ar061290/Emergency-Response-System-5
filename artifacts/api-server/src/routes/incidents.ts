@@ -97,4 +97,43 @@ router.put("/incidents/:incidentId/status", async (req, res) => {
   }
 });
 
+// Alias: PATCH /incidents/{incidentId} matches the Orval-generated client URL
+router.patch("/incidents/:incidentId", async (req, res) => {
+  const parsed = statusUpdateSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Invalid input", details: parsed.error.issues });
+    return;
+  }
+  try {
+    const resolvedAt = parsed.data.status === "resolved" ? new Date() : undefined;
+    const [updated] = await db
+      .update(incidentsTable)
+      .set({ status: parsed.data.status, updatedAt: new Date(), ...(resolvedAt ? { resolvedAt } : {}) })
+      .where(eq(incidentsTable.id, req.params.incidentId))
+      .returning();
+    if (!updated) { res.status(404).json({ error: "Incident not found" }); return; }
+
+    const statusLabels: Record<string, string> = {
+      en_route: "Ambulance En Route",
+      on_scene: "Ambulance On Scene",
+      transporting: "Child Being Transported",
+      at_hospital: "Arrived at Hospital",
+      resolved: "Incident Resolved",
+    };
+    if (statusLabels[parsed.data.status]) {
+      await db.insert(timelineEventsTable).values({
+        incidentId: req.params.incidentId,
+        eventType: `status_${parsed.data.status}`,
+        title: statusLabels[parsed.data.status],
+        description: parsed.data.notes ?? `Status updated to ${parsed.data.status}`,
+        timestamp: new Date(),
+      });
+    }
+    res.json(updated);
+  } catch (err) {
+    req.log.error(err);
+    res.status(500).json({ error: "Failed to update incident status" });
+  }
+});
+
 export default router;

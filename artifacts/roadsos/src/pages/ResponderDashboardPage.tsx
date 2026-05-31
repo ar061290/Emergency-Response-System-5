@@ -131,7 +131,7 @@ export default function ResponderDashboardPage() {
   const handleStatusUpdate = (newStatus: string) => {
     if (!incidentId) return;
     updateStatus.mutate(
-      { incidentId, data: { status: newStatus as "active" } },
+      { incidentId, data: { status: newStatus } },
       {
         onSuccess: () => {
           refetchIncident();
