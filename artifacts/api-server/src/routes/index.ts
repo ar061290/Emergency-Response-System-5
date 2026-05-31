@@ -9,6 +9,8 @@ import vitalsRouter from "./vitals";
 import timelineRouter from "./timeline";
 import sensorRouter from "./sensor";
 import dashboardRouter from "./dashboard";
+import busesRouter from "./buses";
+import routeAnalyticsRouter from "./route_analytics";
 
 const router: IRouter = Router();
 
@@ -22,5 +24,7 @@ router.use(vitalsRouter);
 router.use(timelineRouter);
 router.use(sensorRouter);
 router.use(dashboardRouter);
+router.use(busesRouter);
+router.use(routeAnalyticsRouter);
 
 export default router;

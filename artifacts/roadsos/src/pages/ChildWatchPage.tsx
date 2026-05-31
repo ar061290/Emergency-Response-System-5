@@ -11,13 +11,23 @@ import {
   getListMessagesQueryKey,
 } from "@workspace/api-client-react";
 
-type WatchState = "normal" | "impact" | "confirmed" | "help_coming";
+type WatchState = "normal" | "impact" | "confirmed" | "pain_report" | "help_coming";
+
+const BODY_PARTS = [
+  { id: "head",    label: "Head",    emoji: "🧠" },
+  { id: "chest",   label: "Chest",   emoji: "❤️" },
+  { id: "stomach", label: "Stomach", emoji: "🫁" },
+  { id: "arm",     label: "Arm",     emoji: "💪" },
+  { id: "leg",     label: "Leg",     emoji: "🦵" },
+  { id: "back",    label: "Back",    emoji: "🔙" },
+];
 
 export default function ChildWatchPage() {
   const [watchState, setWatchState] = useState<WatchState>("normal");
   const [etaSeconds, setEtaSeconds] = useState<number>(240);
-  const [showConfirmPrompt, setShowConfirmPrompt] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [painPart, setPainPart] = useState<string | null>(null);
+  const [painLevel, setPainLevel] = useState<number | null>(null);
 
   const { data: incidents } = useGetActiveIncidents({
     query: { refetchInterval: 3000, queryKey: getGetActiveIncidentsQueryKey() },
@@ -27,71 +37,57 @@ export default function ChildWatchPage() {
   const incidentId = activeIncident?.incidentId ?? "";
 
   const { data: vitals } = useGetIncidentVitals(incidentId, {
-    query: {
-      enabled: !!incidentId,
-      refetchInterval: 4000,
-      queryKey: getGetIncidentVitalsQueryKey(incidentId),
-    },
+    query: { enabled: !!incidentId, refetchInterval: 4000, queryKey: getGetIncidentVitalsQueryKey(incidentId) },
   });
 
   const { data: messages } = useListMessages(incidentId, {
-    query: {
-      enabled: !!incidentId,
-      refetchInterval: 5000,
-      queryKey: getListMessagesQueryKey(incidentId),
-    },
+    query: { enabled: !!incidentId, refetchInterval: 5000, queryKey: getListMessagesQueryKey(incidentId) },
   });
 
   const latestVitals = vitals?.[0];
   const reassuranceMsg = messages?.filter((m) => m.recipientType === "child" || m.senderType === "responder").slice(-1)[0];
 
-  // ETA countdown
   useEffect(() => {
-    if (activeIncident?.ambulanceEtaMinutes) {
-      setEtaSeconds(activeIncident.ambulanceEtaMinutes * 60);
-    }
+    if (activeIncident?.ambulanceEtaMinutes) setEtaSeconds(activeIncident.ambulanceEtaMinutes * 60);
   }, [activeIncident?.ambulanceEtaMinutes]);
 
   useEffect(() => {
     if (watchState !== "help_coming") return;
-    const interval = setInterval(() => {
-      setEtaSeconds((s) => Math.max(0, s - 1));
-    }, 1000);
+    const interval = setInterval(() => setEtaSeconds((s) => Math.max(0, s - 1)), 1000);
     return () => clearInterval(interval);
   }, [watchState]);
 
-  // Clock tick
   useEffect(() => {
     const t = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(t);
   }, []);
 
-  // Simulate impact detection if there's an incident
   useEffect(() => {
     if (activeIncident && watchState === "normal") {
       setWatchState("impact");
-      setShowConfirmPrompt(true);
     }
   }, [activeIncident?.incidentId]);
 
   const handleYes = useCallback(() => {
     setWatchState("confirmed");
-    setTimeout(() => setWatchState("help_coming"), 800);
+    setTimeout(() => setWatchState("pain_report"), 700);
   }, []);
 
   const handleNo = useCallback(() => {
     setWatchState("normal");
-    setShowConfirmPrompt(false);
+    setPainPart(null);
+    setPainLevel(null);
+  }, []);
+
+  const handlePainSubmit = useCallback(() => {
+    setWatchState("help_coming");
   }, []);
 
   const etaMinutes = Math.floor(etaSeconds / 60);
   const etaSecsRemainder = etaSeconds % 60;
 
-  const severityColor = activeIncident?.severity === "critical" ? "text-red-400" : "text-yellow-400";
-
   return (
     <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-start pt-6 pb-8 px-4">
-      {/* Back nav */}
       <div className="w-full max-w-sm mb-4 flex items-center gap-2">
         <Link href="/" className="flex items-center gap-1 text-slate-400 hover:text-white transition-colors text-sm" data-testid="link-back-home">
           <ArrowLeft size={16} /> Back
@@ -102,7 +98,7 @@ export default function ChildWatchPage() {
       {/* Watch frame */}
       <div
         className={`relative w-60 rounded-[44px] border-4 overflow-hidden shadow-2xl transition-all duration-500 ${
-          watchState === "impact" || watchState === "confirmed"
+          watchState === "impact" || watchState === "confirmed" || watchState === "pain_report"
             ? "border-red-600 pulsing-red"
             : watchState === "help_coming"
             ? "border-blue-500"
@@ -111,35 +107,27 @@ export default function ChildWatchPage() {
         style={{ background: "#0a0f1a", minHeight: 440 }}
         data-testid="watch-frame"
       >
-        {/* Watch crown buttons (decorative) */}
         <div className="absolute -right-3 top-20 w-3 h-8 bg-slate-700 rounded-r-md" />
         <div className="absolute -right-3 top-32 w-3 h-5 bg-slate-700 rounded-r-md" />
 
-        {/* Screen content */}
         <div className="px-4 pt-5 pb-6 flex flex-col items-center h-full min-h-[436px]">
-
           {/* Status bar */}
           <div className="w-full flex items-center justify-between mb-3">
             <span className="text-slate-400 text-xs font-mono">
               {currentTime.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
             </span>
             <div className="flex items-center gap-1">
-              {watchState === "help_coming" && (
-                <span className="text-blue-400 text-xs font-mono animate-pulse">SOS</span>
-              )}
+              {watchState === "help_coming" && <span className="text-blue-400 text-xs font-mono animate-pulse">SOS</span>}
               <Shield size={12} className="text-slate-400" />
             </div>
           </div>
 
-          {/* Main watch face — state machine */}
           <AnimatePresence mode="wait">
 
+            {/* ── NORMAL ── */}
             {watchState === "normal" && (
-              <motion.div
-                key="normal"
-                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                className="flex flex-col items-center w-full flex-1"
-              >
+              <motion.div key="normal" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                className="flex flex-col items-center w-full flex-1">
                 <div className="text-slate-400 text-xs uppercase tracking-widest mb-2">Emma Chen</div>
                 <div className="text-white text-6xl font-bold font-mono mb-1">
                   {currentTime.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false })}
@@ -167,32 +155,24 @@ export default function ChildWatchPage() {
               </motion.div>
             )}
 
+            {/* ── IMPACT ── */}
             {watchState === "impact" && (
-              <motion.div
-                key="impact"
-                initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ opacity: 0 }}
-                className="flex flex-col items-center w-full flex-1"
-              >
+              <motion.div key="impact" initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ opacity: 0 }}
+                className="flex flex-col items-center w-full flex-1">
                 <div className="mb-3 flex items-center justify-center w-16 h-16 rounded-full bg-red-900/50 border-2 border-red-500">
                   <AlertTriangle size={32} className="text-red-400" />
                 </div>
                 <div className="text-red-400 font-bold text-lg text-center leading-tight mb-1">Are you okay?</div>
                 <div className="text-slate-400 text-xs text-center mb-4">Impact detected. Do you need help?</div>
                 <div className="w-full flex flex-col gap-3">
-                  <motion.button
-                    whileTap={{ scale: 0.97 }}
-                    onClick={handleYes}
+                  <motion.button whileTap={{ scale: 0.97 }} onClick={handleYes}
                     className="w-full h-16 rounded-2xl bg-red-600 text-white font-bold text-xl border-2 border-red-500 active:bg-red-700"
-                    data-testid="button-need-help-yes"
-                  >
+                    data-testid="button-need-help-yes">
                     YES — HELP ME
                   </motion.button>
-                  <motion.button
-                    whileTap={{ scale: 0.97 }}
-                    onClick={handleNo}
+                  <motion.button whileTap={{ scale: 0.97 }} onClick={handleNo}
                     className="w-full h-12 rounded-2xl bg-slate-700 text-slate-200 font-semibold text-base border border-slate-600 active:bg-slate-600"
-                    data-testid="button-need-help-no"
-                  >
+                    data-testid="button-need-help-no">
                     No, I'm fine
                   </motion.button>
                 </div>
@@ -200,16 +180,12 @@ export default function ChildWatchPage() {
               </motion.div>
             )}
 
+            {/* ── CONFIRMED ── */}
             {watchState === "confirmed" && (
-              <motion.div
-                key="confirmed"
-                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                className="flex flex-col items-center w-full flex-1 justify-center"
-              >
-                <motion.div
-                  initial={{ scale: 0 }} animate={{ scale: 1 }}
-                  className="w-16 h-16 rounded-full bg-blue-600 flex items-center justify-center mb-4"
-                >
+              <motion.div key="confirmed" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                className="flex flex-col items-center w-full flex-1 justify-center">
+                <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}
+                  className="w-16 h-16 rounded-full bg-blue-600 flex items-center justify-center mb-4">
                   <CheckCircle size={32} className="text-white" />
                 </motion.div>
                 <div className="text-white font-bold text-lg">Alert Sent</div>
@@ -217,36 +193,104 @@ export default function ChildWatchPage() {
               </motion.div>
             )}
 
+            {/* ── PAIN REPORT ── */}
+            {watchState === "pain_report" && (
+              <motion.div key="pain" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                className="flex flex-col items-center w-full flex-1">
+                <div className="text-red-400 font-bold text-base text-center mb-1">Where does it hurt?</div>
+                <div className="text-slate-400 text-xs text-center mb-3">Tap your injury location</div>
+
+                {/* Body part grid */}
+                <div className="w-full grid grid-cols-3 gap-1.5 mb-3">
+                  {BODY_PARTS.map((part) => (
+                    <motion.button
+                      key={part.id}
+                      whileTap={{ scale: 0.92 }}
+                      onClick={() => setPainPart(part.id)}
+                      className={`rounded-xl py-2.5 flex flex-col items-center gap-0.5 border transition-colors ${
+                        painPart === part.id
+                          ? "bg-red-600/40 border-red-500 text-white"
+                          : "bg-slate-800/60 border-slate-700 text-slate-300"
+                      }`}
+                      data-testid={`body-part-${part.id}`}
+                    >
+                      <span style={{ fontSize: 18 }}>{part.emoji}</span>
+                      <span className="text-xs font-medium">{part.label}</span>
+                    </motion.button>
+                  ))}
+                </div>
+
+                {/* Pain scale */}
+                <div className="w-full mb-3">
+                  <div className="text-slate-400 text-xs text-center mb-2">How bad? (1 = mild, 5 = worst)</div>
+                  <div className="flex gap-1.5 justify-center">
+                    {[1, 2, 3, 4, 5].map((n) => (
+                      <motion.button
+                        key={n}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={() => setPainLevel(n)}
+                        className={`w-9 h-9 rounded-xl font-bold text-sm border transition-colors ${
+                          painLevel === n
+                            ? n >= 4 ? "bg-red-600 border-red-500 text-white" : n >= 3 ? "bg-yellow-600 border-yellow-500 text-white" : "bg-green-700 border-green-600 text-white"
+                            : "bg-slate-800 border-slate-700 text-slate-300"
+                        }`}
+                        data-testid={`pain-level-${n}`}
+                      >
+                        {n}
+                      </motion.button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="w-full flex gap-2">
+                  <button
+                    onClick={handlePainSubmit}
+                    className="flex-1 text-xs py-1.5 rounded-xl bg-slate-700 border border-slate-600 text-slate-300"
+                    data-testid="button-pain-skip"
+                  >
+                    Skip
+                  </button>
+                  <motion.button
+                    whileTap={{ scale: 0.97 }}
+                    onClick={handlePainSubmit}
+                    disabled={!painPart || !painLevel}
+                    className="flex-[2] py-2.5 rounded-xl bg-red-600 text-white font-bold text-sm border-2 border-red-500 disabled:opacity-40"
+                    data-testid="button-pain-send"
+                  >
+                    Send to Responders
+                  </motion.button>
+                </div>
+              </motion.div>
+            )}
+
+            {/* ── HELP COMING ── */}
             {watchState === "help_coming" && (
-              <motion.div
-                key="help"
-                initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                className="flex flex-col items-center w-full flex-1"
-              >
-                {/* ETA display */}
+              <motion.div key="help" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                className="flex flex-col items-center w-full flex-1">
                 <div className="text-slate-400 text-xs uppercase tracking-widest mb-1">Ambulance ETA</div>
-                <motion.div
-                  key={etaMinutes}
-                  initial={{ opacity: 0.5, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="text-white font-bold text-7xl font-mono leading-none mb-0.5"
-                  data-testid="text-eta-minutes"
-                >
+                <motion.div key={etaMinutes} initial={{ opacity: 0.5, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+                  className="text-white font-bold text-7xl font-mono leading-none mb-0.5" data-testid="text-eta-minutes">
                   {etaMinutes < 10 ? `0${etaMinutes}` : etaMinutes}
                 </motion.div>
-                <div className="text-slate-400 text-sm font-mono mb-1">
-                  :{etaSecsRemainder < 10 ? `0${etaSecsRemainder}` : etaSecsRemainder}
-                </div>
-                <div className="text-slate-500 text-xs mb-4">minutes away</div>
+                <div className="text-slate-400 text-sm font-mono mb-1">:{etaSecsRemainder < 10 ? `0${etaSecsRemainder}` : etaSecsRemainder}</div>
+                <div className="text-slate-500 text-xs mb-3">minutes away</div>
 
-                {/* Status items */}
+                {/* Pain summary badge */}
+                {painPart && painLevel && (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                    className="w-full mb-2 bg-red-900/20 border border-red-700/30 rounded-xl px-3 py-1.5 flex items-center gap-2"
+                    data-testid="pain-summary">
+                    <span style={{ fontSize: 14 }}>{BODY_PARTS.find((p) => p.id === painPart)?.emoji}</span>
+                    <span className="text-xs text-red-300 font-medium capitalize">{painPart} pain</span>
+                    <span className="ml-auto text-xs text-slate-400">Level {painLevel}/5</span>
+                  </motion.div>
+                )}
+
                 <div className="w-full space-y-2">
                   <div className="flex items-center gap-2 bg-blue-900/30 rounded-xl px-3 py-2" data-testid="status-ambulance">
                     <div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse flex-shrink-0" />
                     <span className="text-blue-300 text-xs">
-                      {activeIncident?.ambulanceEtaMinutes != null
-                        ? `AMB en route — ${activeIncident.ambulanceEtaMinutes} min`
-                        : "Ambulance dispatched"}
+                      {activeIncident?.ambulanceEtaMinutes != null ? `AMB en route — ${activeIncident.ambulanceEtaMinutes} min` : "Ambulance dispatched"}
                     </span>
                   </div>
                   <div className="flex items-center gap-2 bg-green-900/30 rounded-xl px-3 py-2" data-testid="status-parent">
@@ -261,7 +305,6 @@ export default function ChildWatchPage() {
                   )}
                 </div>
 
-                {/* Vitals strip */}
                 <div className="w-full mt-3 grid grid-cols-2 gap-2">
                   <div className="bg-slate-800/70 rounded-xl p-2 flex flex-col items-center" data-testid="stat-hr-watch">
                     <Heart size={12} className="text-red-400 mb-0.5" />
@@ -275,19 +318,16 @@ export default function ChildWatchPage() {
                   </div>
                 </div>
 
-                {/* Reassurance message */}
                 {reassuranceMsg && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                     className="mt-3 w-full bg-blue-900/20 border border-blue-500/30 rounded-xl px-3 py-2"
-                    data-testid="text-reassurance"
-                  >
+                    data-testid="text-reassurance">
                     <div className="text-blue-300 text-xs leading-relaxed">{reassuranceMsg.content}</div>
                   </motion.div>
                 )}
               </motion.div>
             )}
+
           </AnimatePresence>
         </div>
 
@@ -295,9 +335,7 @@ export default function ChildWatchPage() {
         <div className="bg-slate-900/80 border-t border-slate-800 px-4 py-2 flex items-center justify-between">
           <Phone size={14} className="text-slate-500" />
           <div className="flex gap-1">
-            {[0, 1, 2].map((i) => (
-              <div key={i} className="w-1.5 h-1.5 rounded-full bg-slate-600" />
-            ))}
+            {[0, 1, 2].map((i) => <div key={i} className="w-1.5 h-1.5 rounded-full bg-slate-600" />)}
           </div>
           <Clock size={14} className="text-slate-500" />
         </div>
@@ -307,25 +345,24 @@ export default function ChildWatchPage() {
       <div className="mt-6 w-full max-w-sm">
         <div className="text-slate-600 text-xs uppercase tracking-widest text-center mb-3">Simulate</div>
         <div className="flex gap-2">
-          <button
-            onClick={() => { setWatchState("impact"); setShowConfirmPrompt(true); }}
+          <button onClick={() => { setWatchState("impact"); setPainPart(null); setPainLevel(null); }}
             className="flex-1 py-2 rounded-xl bg-red-900/30 border border-red-800/50 text-red-400 text-sm hover:bg-red-900/50 transition-colors"
-            data-testid="button-sim-impact"
-          >
+            data-testid="button-sim-impact">
             Impact
           </button>
-          <button
-            onClick={() => { setWatchState("help_coming"); setEtaSeconds(240); }}
+          <button onClick={() => { setWatchState("pain_report"); }}
+            className="flex-1 py-2 rounded-xl bg-orange-900/30 border border-orange-800/50 text-orange-400 text-sm hover:bg-orange-900/50 transition-colors"
+            data-testid="button-sim-pain">
+            Pain Report
+          </button>
+          <button onClick={() => { setWatchState("help_coming"); setEtaSeconds(240); }}
             className="flex-1 py-2 rounded-xl bg-blue-900/30 border border-blue-800/50 text-blue-400 text-sm hover:bg-blue-900/50 transition-colors"
-            data-testid="button-sim-help"
-          >
+            data-testid="button-sim-help">
             Help Coming
           </button>
-          <button
-            onClick={() => setWatchState("normal")}
+          <button onClick={() => setWatchState("normal")}
             className="flex-1 py-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-400 text-sm hover:bg-slate-700 transition-colors"
-            data-testid="button-sim-normal"
-          >
+            data-testid="button-sim-normal">
             Normal
           </button>
         </div>

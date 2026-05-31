@@ -559,6 +559,134 @@ class AsyncBackendClient:
 
 
 # ---------------------------------------------------------------------------
+# Offline incident buffer  (store-and-forward when connectivity is lost)
+# ---------------------------------------------------------------------------
+
+class OfflineIncidentBuffer:
+    """
+    Stores incidents locally when connectivity is lost.
+    Syncs automatically when connectivity returns by calling
+    BackendClient.submit_sensor_data for each buffered frame.
+
+    Usage::
+
+        buffer = OfflineIncidentBuffer()
+        if is_offline:
+            buffer_id = buffer.save_incident_offline(incident_data)
+        else:
+            results = buffer.flush(backend_client)
+    """
+
+    def __init__(self, buffer_dir: str = "/tmp/roadsos_offline"):
+        import json as _json
+        from pathlib import Path as _Path
+        self._json = _json
+        self._buffer_dir = _Path(buffer_dir)
+        self._buffer_dir.mkdir(parents=True, exist_ok=True)
+        self.sync_status = "ready"
+        logger.info("OfflineIncidentBuffer initialised at %s", self._buffer_dir)
+
+    def save_incident_offline(self, incident_data: dict) -> str:
+        """
+        Persist incident data to local filesystem while offline.
+
+        Args:
+            incident_data: {
+                child_id, device_id, lat, lon,
+                impact_magnitude, heart_rate, temperature,
+                acceleration_vector: {x, y, z},
+                timestamp (ISO)
+            }
+
+        Returns:
+            buffer_id — unique key for this buffered entry
+        """
+        buffer_id = f"offline_{int(time.time() * 1000)}"
+        path = self._buffer_dir / f"{buffer_id}.json"
+        incident_data.update(
+            buffer_id=buffer_id,
+            buffered_at=datetime.now(timezone.utc).isoformat(),
+            synced=False,
+        )
+        path.write_text(self._json.dumps(incident_data))
+        logger.warning("Incident buffered offline: %s (mag=%.2f)", buffer_id,
+                       incident_data.get("impact_magnitude", 0))
+        return buffer_id
+
+    def get_pending(self) -> list:
+        """Return all unsynced buffered incidents sorted by buffer time."""
+        pending = []
+        for path in sorted(self._buffer_dir.glob("offline_*.json")):
+            try:
+                entry = self._json.loads(path.read_text())
+                if not entry.get("synced"):
+                    pending.append(entry)
+            except Exception as exc:
+                logger.error("Failed to read buffer file %s: %s", path, exc)
+        return pending
+
+    def mark_synced(self, buffer_id: str) -> bool:
+        """Mark a buffered incident as successfully synced."""
+        path = self._buffer_dir / f"{buffer_id}.json"
+        if not path.exists():
+            return False
+        entry = self._json.loads(path.read_text())
+        entry["synced"] = True
+        entry["synced_at"] = datetime.now(timezone.utc).isoformat()
+        path.write_text(self._json.dumps(entry))
+        logger.info("Buffer entry synced: %s", buffer_id)
+        return True
+
+    def flush(self, backend: "BackendClient") -> dict:
+        """
+        Replay all pending buffered incidents against the backend.
+        Call this when connectivity is restored.
+
+        Returns:
+            {"synced": int, "failed": int, "results": list}
+        """
+        pending = self.get_pending()
+        if not pending:
+            logger.info("No offline incidents to flush.")
+            return {"synced": 0, "failed": 0, "results": []}
+
+        self.sync_status = "syncing"
+        synced, failed, results = 0, 0, []
+
+        for entry in pending:
+            try:
+                raw = RawSensorFrame(
+                    timestamp_ms=int(
+                        datetime.fromisoformat(entry["timestamp"]).timestamp() * 1000
+                    ),
+                    accel_x=entry["acceleration_vector"]["x"],
+                    accel_y=entry["acceleration_vector"]["y"],
+                    accel_z=entry["acceleration_vector"]["z"],
+                    heart_rate_raw=entry.get("heart_rate"),
+                    skin_temp_raw=entry.get("temperature"),
+                    latitude=entry.get("lat"),
+                    longitude=entry.get("lon"),
+                    device_id=entry.get("device_id", Config.DEVICE_ID),
+                )
+                result = backend.submit_sensor_data(raw)
+                if result:
+                    self.mark_synced(entry["buffer_id"])
+                    synced += 1
+                    results.append({"buffer_id": entry["buffer_id"], "status": "ok"})
+                else:
+                    failed += 1
+                    results.append({"buffer_id": entry["buffer_id"], "status": "backend_error"})
+            except Exception as exc:
+                failed += 1
+                results.append({"buffer_id": entry["buffer_id"], "status": "error", "detail": str(exc)})
+                logger.error("Failed to sync buffer entry %s: %s", entry.get("buffer_id"), exc)
+
+        self.sync_status = "ready"
+        logger.info("Flush complete: %d synced, %d failed", synced, failed)
+        return {"synced": synced, "failed": failed, "results": results}
+
+
+# ---------------------------------------------------------------------------
 # Main sensor processor pipeline
 # ---------------------------------------------------------------------------
 

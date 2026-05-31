@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "wouter";
 import {
   ArrowLeft, AlertTriangle, CheckCircle, Clock, MapPin, Ambulance, Heart,
-  Thermometer, Building2, Phone, Send, Activity, ChevronRight, User
+  Thermometer, Building2, Phone, Send, Activity, ChevronRight, User, Bus
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,6 +18,7 @@ import {
   useGetIncidentTimeline, getGetIncidentTimelineQueryKey,
   useListMessages, getListMessagesQueryKey,
   useSendMessage,
+  useListBuses, getListBusesQueryKey,
 } from "@workspace/api-client-react";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
@@ -71,6 +72,11 @@ export default function ParentDashboardPage() {
   });
 
   const sendMessage = useSendMessage();
+
+  const { data: buses } = useListBuses(undefined, {
+    query: { refetchInterval: 10000, queryKey: getListBusesQueryKey() },
+  });
+  const activeBus = buses?.find((b) => b.isActive && b.currentStatus === "in_transit") ?? null;
 
   const latestVitals = vitals?.[0];
   const elapsedMin = activeIncidents?.find((i) => i.incidentId === incidentId)?.elapsedMinutes;
@@ -263,6 +269,17 @@ export default function ParentDashboardPage() {
                           <div className="w-4 h-4 rounded-full bg-green-500 border-2 border-white shadow-lg" data-testid="map-hospital-pin" />
                           <div className="text-xs text-white bg-slate-900/80 rounded px-1 mt-0.5 whitespace-nowrap">Hospital</div>
                         </div>
+                        {/* School bus pin */}
+                        {activeBus && (
+                          <div className="absolute flex flex-col items-center" style={{ left: "75%", top: "55%" }}>
+                            <div className="w-4 h-4 rounded-sm bg-yellow-400 border-2 border-white shadow-lg flex items-center justify-center" data-testid="map-bus-pin">
+                              <Bus size={8} className="text-black" />
+                            </div>
+                            <div className="text-xs text-white bg-slate-900/80 rounded px-1 mt-0.5 whitespace-nowrap">
+                              {activeBus.busNumber ?? activeBus.busId}
+                            </div>
+                          </div>
+                        )}
                         {/* Route line */}
                         <svg className="absolute inset-0 w-full h-full" style={{ pointerEvents: "none" }}>
                           <line x1="32%" y1="62%" x2="46%" y2="42%" stroke="#3b82f6" strokeWidth="1.5" strokeDasharray="4 3" opacity="0.7" />
@@ -283,6 +300,12 @@ export default function ParentDashboardPage() {
                           <div className="w-2 h-2 rounded-full bg-green-500" />
                           <span className="text-xs text-slate-300">Hospital</span>
                         </div>
+                        {activeBus && (
+                          <div className="flex items-center gap-1 bg-slate-900/80 rounded px-1.5 py-0.5">
+                            <div className="w-2 h-2 rounded-sm bg-yellow-400" />
+                            <span className="text-xs text-slate-300">Bus</span>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </CardContent>

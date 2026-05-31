@@ -1,4 +1,4 @@
-import { pgTable, text, real, integer, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, real, integer, boolean, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -28,6 +28,13 @@ export const incidentsTable = pgTable("incidents", {
   hospitalId: text("hospital_id"),
   hospitalName: text("hospital_name"),
   impactMagnitude: real("impact_magnitude"),
+  busId: text("bus_id"),
+  busRoute: text("bus_route"),
+  traumaCenterSelected: text("trauma_center_selected"),
+  traumaCenterReason: text("trauma_center_reason"),
+  painBodyPart: text("pain_body_part"),
+  painLevel: integer("pain_level"),
+  offlineBuffered: boolean("offline_buffered").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
   resolvedAt: timestamp("resolved_at"),

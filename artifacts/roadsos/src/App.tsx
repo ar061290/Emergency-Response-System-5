@@ -8,6 +8,7 @@ import LandingPage from "@/pages/LandingPage";
 import ChildWatchPage from "@/pages/ChildWatchPage";
 import ParentDashboardPage from "@/pages/ParentDashboardPage";
 import ResponderDashboardPage from "@/pages/ResponderDashboardPage";
+import RouteSafetyPage from "@/pages/RouteSafetyPage";
 
 const queryClient = new QueryClient();
 
@@ -18,6 +19,7 @@ function Router() {
       <Route path="/child-watch" component={ChildWatchPage} />
       <Route path="/parent" component={ParentDashboardPage} />
       <Route path="/responder" component={ResponderDashboardPage} />
+      <Route path="/route-safety" component={RouteSafetyPage} />
       <Route component={NotFound} />
     </Switch>
   );

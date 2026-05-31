@@ -22,6 +22,7 @@ import type {
 import type {
   ActiveIncidentSummary,
   Ambulance,
+  BusLocationInput,
   Child,
   ChildInput,
   DashboardSummary,
@@ -30,11 +31,14 @@ import type {
   Incident,
   IncidentInput,
   IncidentStatusUpdate,
+  ListBusesParams,
   ListHospitalsParams,
   ListIncidentsParams,
   LocationUpdate,
   Message,
   MessageInput,
+  RouteAnalytic,
+  SchoolBus,
   SensorDataInput,
   SensorDataResult,
   TimelineEvent,
@@ -1491,4 +1495,237 @@ export const useSubmitSensorData = <TError = ErrorType<unknown>,
       > => {
       return useMutation(getSubmitSensorDataMutationOptions(options));
     }
+
+export const getListBusesUrl = (params?: ListBusesParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/buses?${stringifiedParams}` : `/api/buses`
+}
+
+/**
+ * @summary List school buses
+ */
+export const listBuses = async (params?: ListBusesParams, options?: RequestInit): Promise<SchoolBus[]> => {
+
+  return customFetch<SchoolBus[]>(getListBusesUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListBusesQueryKey = (params?: ListBusesParams,) => {
+    return [
+    `/api/buses`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListBusesQueryOptions = <TData = Awaited<ReturnType<typeof listBuses>>, TError = ErrorType<unknown>>(params?: ListBusesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listBuses>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListBusesQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listBuses>>> = ({ signal }) => listBuses(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listBuses>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListBusesQueryResult = NonNullable<Awaited<ReturnType<typeof listBuses>>>
+export type ListBusesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List school buses
+ */
+
+export function useListBuses<TData = Awaited<ReturnType<typeof listBuses>>, TError = ErrorType<unknown>>(
+ params?: ListBusesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listBuses>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListBusesQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getUpdateBusLocationUrl = (busId: string,) => {
+
+
+
+
+  return `/api/buses/${busId}/location`
+}
+
+/**
+ * @summary Update bus GPS location
+ */
+export const updateBusLocation = async (busId: string,
+    busLocationInput: BusLocationInput, options?: RequestInit): Promise<SchoolBus> => {
+
+  return customFetch<SchoolBus>(getUpdateBusLocationUrl(busId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      busLocationInput,)
+  }
+);}
+
+
+
+
+export const getUpdateBusLocationMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusLocation>>, TError,{busId: string;data: BodyType<BusLocationInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateBusLocation>>, TError,{busId: string;data: BodyType<BusLocationInput>}, TContext> => {
+
+const mutationKey = ['updateBusLocation'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateBusLocation>>, {busId: string;data: BodyType<BusLocationInput>}> = (props) => {
+          const {busId,data} = props ?? {};
+
+          return  updateBusLocation(busId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateBusLocationMutationResult = NonNullable<Awaited<ReturnType<typeof updateBusLocation>>>
+    export type UpdateBusLocationMutationBody = BodyType<BusLocationInput>
+    export type UpdateBusLocationMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Update bus GPS location
+ */
+export const useUpdateBusLocation = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateBusLocation>>, TError,{busId: string;data: BodyType<BusLocationInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateBusLocation>>,
+        TError,
+        {busId: string;data: BodyType<BusLocationInput>},
+        TContext
+      > => {
+      return useMutation(getUpdateBusLocationMutationOptions(options));
+    }
+
+export const getListRouteAnalyticsUrl = () => {
+
+
+
+
+  return `/api/route-analytics`
+}
+
+/**
+ * @summary List all route safety analytics ordered by coverage score ascending
+ */
+export const listRouteAnalytics = async ( options?: RequestInit): Promise<RouteAnalytic[]> => {
+
+  return customFetch<RouteAnalytic[]>(getListRouteAnalyticsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListRouteAnalyticsQueryKey = () => {
+    return [
+    `/api/route-analytics`
+    ] as const;
+    }
+
+
+export const getListRouteAnalyticsQueryOptions = <TData = Awaited<ReturnType<typeof listRouteAnalytics>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listRouteAnalytics>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListRouteAnalyticsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listRouteAnalytics>>> = ({ signal }) => listRouteAnalytics({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listRouteAnalytics>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListRouteAnalyticsQueryResult = NonNullable<Awaited<ReturnType<typeof listRouteAnalytics>>>
+export type ListRouteAnalyticsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List all route safety analytics ordered by coverage score ascending
+ */
+
+export function useListRouteAnalytics<TData = Awaited<ReturnType<typeof listRouteAnalytics>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listRouteAnalytics>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListRouteAnalyticsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
 

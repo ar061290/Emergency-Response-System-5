@@ -452,3 +452,87 @@ export const SubmitSensorDataResponse = zod.object({
 })
 
 
+/**
+ * @summary List school buses
+ */
+export const ListBusesQueryParams = zod.object({
+  "schoolId": zod.coerce.string().optional()
+})
+
+export const ListBusesResponseItem = zod.object({
+  "id": zod.string(),
+  "busId": zod.string(),
+  "busNumber": zod.string().nullish(),
+  "schoolName": zod.string(),
+  "routeName": zod.string(),
+  "currentLat": zod.number().nullish(),
+  "currentLon": zod.number().nullish(),
+  "currentLocationName": zod.string().nullish(),
+  "currentStatus": zod.string(),
+  "driverName": zod.string().nullish(),
+  "isActive": zod.boolean(),
+  "lastLocationUpdate": zod.string().nullish()
+})
+export const ListBusesResponse = zod.array(ListBusesResponseItem)
+
+
+/**
+ * @summary Update bus GPS location
+ */
+export const UpdateBusLocationParams = zod.object({
+  "busId": zod.coerce.string()
+})
+
+export const UpdateBusLocationBody = zod.object({
+  "lat": zod.number(),
+  "lon": zod.number(),
+  "locationName": zod.string().optional()
+})
+
+export const UpdateBusLocationResponse = zod.object({
+  "id": zod.string(),
+  "busId": zod.string(),
+  "busNumber": zod.string().nullish(),
+  "schoolName": zod.string(),
+  "routeName": zod.string(),
+  "currentLat": zod.number().nullish(),
+  "currentLon": zod.number().nullish(),
+  "currentLocationName": zod.string().nullish(),
+  "currentStatus": zod.string(),
+  "driverName": zod.string().nullish(),
+  "isActive": zod.boolean(),
+  "lastLocationUpdate": zod.string().nullish()
+})
+
+
+/**
+ * @summary List all route safety analytics ordered by coverage score ascending
+ */
+export const ListRouteAnalyticsResponseItem = zod.object({
+  "id": zod.string(),
+  "routeName": zod.string(),
+  "schoolName": zod.string(),
+  "startLocationName": zod.string(),
+  "endLocationName": zod.string(),
+  "coverageScore": zod.number(),
+  "avgResponseTimeMin": zod.number(),
+  "avgAmbulanceDistanceKm": zod.number(),
+  "incidentCount": zod.number(),
+  "totalChildrenOnRoute": zod.number(),
+  "gapCount": zod.number(),
+  "gaps": zod.array(zod.object({
+  "lat": zod.number(),
+  "lon": zod.number(),
+  "severity": zod.string(),
+  "distanceKm": zod.number()
+})).optional(),
+  "recommendedPostLat": zod.number().nullish(),
+  "recommendedPostLon": zod.number().nullish(),
+  "recommendedPostName": zod.string().nullish(),
+  "projectedResponseTimeMin": zod.number().nullish(),
+  "isHighRisk": zod.boolean(),
+  "lastAnalyzed": zod.string()
+})
+export const ListRouteAnalyticsResponse = zod.array(ListRouteAnalyticsResponseItem)
+
+

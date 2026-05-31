@@ -267,6 +267,65 @@ export interface SensorDataResult {
   alerts: string[];
 }
 
+export interface SchoolBus {
+  id: string;
+  busId: string;
+  /** @nullable */
+  busNumber?: string | null;
+  schoolName: string;
+  routeName: string;
+  /** @nullable */
+  currentLat?: number | null;
+  /** @nullable */
+  currentLon?: number | null;
+  /** @nullable */
+  currentLocationName?: string | null;
+  currentStatus: string;
+  /** @nullable */
+  driverName?: string | null;
+  isActive: boolean;
+  /** @nullable */
+  lastLocationUpdate?: string | null;
+}
+
+export interface BusLocationInput {
+  lat: number;
+  lon: number;
+  locationName?: string;
+}
+
+export interface CoverageGap {
+  lat: number;
+  lon: number;
+  severity: string;
+  distanceKm: number;
+}
+
+export interface RouteAnalytic {
+  id: string;
+  routeName: string;
+  schoolName: string;
+  startLocationName: string;
+  endLocationName: string;
+  coverageScore: number;
+  avgResponseTimeMin: number;
+  avgAmbulanceDistanceKm: number;
+  incidentCount: number;
+  totalChildrenOnRoute: number;
+  gapCount: number;
+  gaps?: CoverageGap[];
+  /** @nullable */
+  recommendedPostLat?: number | null;
+  /** @nullable */
+  recommendedPostLon?: number | null;
+  /** @nullable */
+  recommendedPostName?: string | null;
+  /** @nullable */
+  projectedResponseTimeMin?: number | null;
+  isHighRisk: boolean;
+  lastAnalyzed: string;
+}
+
 export type ListIncidentsParams = {
 status?: string;
 limit?: number;
@@ -275,5 +334,9 @@ limit?: number;
 export type ListHospitalsParams = {
 lat?: number;
 lng?: number;
+};
+
+export type ListBusesParams = {
+schoolId?: string;
 };
 

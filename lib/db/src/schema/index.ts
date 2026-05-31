@@ -5,3 +5,5 @@ export * from "./incidents";
 export * from "./vitals";
 export * from "./messages";
 export * from "./timeline_events";
+export * from "./school_buses";
+export * from "./route_analytics";

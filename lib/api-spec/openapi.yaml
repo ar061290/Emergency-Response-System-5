@@ -25,6 +25,10 @@ tags:
     description: Parent-child messaging
   - name: dashboard
     description: Dashboard summary data
+  - name: buses
+    description: School bus tracking
+  - name: route-analytics
+    description: Route safety analytics
 
 paths:
   /healthz:
@@ -389,6 +393,66 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/SensorDataResult"
+
+  /buses:
+    get:
+      operationId: listBuses
+      tags: [buses]
+      summary: List school buses
+      parameters:
+        - name: schoolId
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of school buses
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SchoolBus"
+
+  /buses/{busId}/location:
+    post:
+      operationId: updateBusLocation
+      tags: [buses]
+      summary: Update bus GPS location
+      parameters:
+        - name: busId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BusLocationInput"
+      responses:
+        "200":
+          description: Updated bus record
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SchoolBus"
+
+  /route-analytics:
+    get:
+      operationId: listRouteAnalytics
+      tags: [route-analytics]
+      summary: List all route safety analytics ordered by coverage score ascending
+      responses:
+        "200":
+          description: List of route analytics
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RouteAnalytic"
 
 components:
   schemas:
@@ -877,3 +941,99 @@ components:
           items:
             type: string
       required: [impactDetected, severity, impactMagnitude, incidentCreated, alerts]
+
+    SchoolBus:
+      type: object
+      properties:
+        id:
+          type: string
+        busId:
+          type: string
+        busNumber:
+          type: ["string", "null"]
+        schoolName:
+          type: string
+        routeName:
+          type: string
+        currentLat:
+          type: ["number", "null"]
+        currentLon:
+          type: ["number", "null"]
+        currentLocationName:
+          type: ["string", "null"]
+        currentStatus:
+          type: string
+        driverName:
+          type: ["string", "null"]
+        isActive:
+          type: boolean
+        lastLocationUpdate:
+          type: ["string", "null"]
+      required: [id, busId, schoolName, routeName, currentStatus, isActive]
+
+    BusLocationInput:
+      type: object
+      properties:
+        lat:
+          type: number
+        lon:
+          type: number
+        locationName:
+          type: string
+      required: [lat, lon]
+
+    CoverageGap:
+      type: object
+      properties:
+        lat:
+          type: number
+        lon:
+          type: number
+        severity:
+          type: string
+        distanceKm:
+          type: number
+      required: [lat, lon, severity, distanceKm]
+
+    RouteAnalytic:
+      type: object
+      properties:
+        id:
+          type: string
+        routeName:
+          type: string
+        schoolName:
+          type: string
+        startLocationName:
+          type: string
+        endLocationName:
+          type: string
+        coverageScore:
+          type: number
+        avgResponseTimeMin:
+          type: integer
+        avgAmbulanceDistanceKm:
+          type: number
+        incidentCount:
+          type: integer
+        totalChildrenOnRoute:
+          type: integer
+        gapCount:
+          type: integer
+        gaps:
+          type: array
+          items:
+            $ref: "#/components/schemas/CoverageGap"
+        recommendedPostLat:
+          type: ["number", "null"]
+        recommendedPostLon:
+          type: ["number", "null"]
+        recommendedPostName:
+          type: ["string", "null"]
+        projectedResponseTimeMin:
+          type: ["integer", "null"]
+        isHighRisk:
+          type: boolean
+        lastAnalyzed:
+          type: string
+      required: [id, routeName, schoolName, startLocationName, endLocationName, coverageScore, avgResponseTimeMin, avgAmbulanceDistanceKm, incidentCount, totalChildrenOnRoute, gapCount, isHighRisk, lastAnalyzed]
