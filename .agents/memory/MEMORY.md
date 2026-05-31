@@ -3,3 +3,5 @@
 - [Orval hook call pattern](orval-hook-params.md) — hooks with query params use (params, options) signature; pass `undefined` as first arg when only options needed
 - [SSE Pattern](sse-pattern.md) — Orval can't handle text/event-stream; use `new EventSource('/api/events')` directly in frontend, never via codegen.
 - [Sensor→Incident field names](sensor-incident-schema.md) — DB uses `locationAddress` (not `locationName`) and `ambulanceUnit` (not `ambulanceName`); missing `parentName`/`parentPhone` causes insert failure.
+- [Offline buffering](offline-buffering.md) — `localStorage` queue for sensor payloads; `window` online/offline events; auto-sync on reconnect; `offlineBuffered` flag on server payload.
+- [AI fallback without OpenAI](ai-fallback.md) — deterministic hospital scoring algorithm; rule-based severity classification; randomized voice-chat replies; all work when `OPENAI_API_KEY` is placeholder/missing.

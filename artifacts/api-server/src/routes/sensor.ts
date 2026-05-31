@@ -18,6 +18,7 @@ const sensorSchema = z.object({
   temperature: z.number(),
   latitude: z.number().optional(),
   longitude: z.number().optional(),
+  offlineBuffered: z.boolean().optional().default(false),
 });
 
 function classifySeverity(mag: number): "minor" | "moderate" | "critical" {

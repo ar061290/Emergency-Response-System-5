@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Link } from "wouter";
-import { ArrowLeft, Phone, MapPin, AlertTriangle, CheckCircle, Heart, Thermometer, Clock, Shield, Mic, MicOff, MessageCircle, X, Zap } from "lucide-react";
+import { ArrowLeft, Phone, MapPin, AlertTriangle, CheckCircle, Heart, Thermometer, Clock, Shield, Mic, MicOff, MessageCircle, X, Zap, WifiOff, RefreshCw } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   useGetActiveIncidents,
@@ -11,6 +11,12 @@ import {
   getListMessagesQueryKey,
   useAiVoiceChat,
 } from "@workspace/api-client-react";
+import {
+  isOnline,
+  pushOfflineBuffer,
+  getOfflineBuffer,
+  removeOfflineEntry,
+} from "@/lib/offline";
 
 type WatchState = "normal" | "impact" | "confirmed" | "pain_report" | "help_coming";
 
@@ -45,6 +51,9 @@ export default function ChildWatchPage() {
   const [aiReply, setAiReply] = useState<string | null>(null);
   const [isListening, setIsListening] = useState(false);
   const [sensorSimLoading, setSensorSimLoading] = useState(false);
+  const [online, setOnline] = useState(isOnline());
+  const [bufferCount, setBufferCount] = useState(getOfflineBuffer().length);
+  const [syncing, setSyncing] = useState(false);
   const recognitionRef = useRef<SpeechRecognitionType | null>(null);
   const voiceChat = useAiVoiceChat();
 
@@ -75,21 +84,33 @@ export default function ChildWatchPage() {
 
   const simulateSensorImpact = useCallback(async () => {
     setSensorSimLoading(true);
+    const payload = {
+      deviceId: "innerwear_dev_001",
+      accelerometerX: 52.4,
+      accelerometerY: 38.6,
+      accelerometerZ: 12.1,
+      heartRate: 118,
+      temperature: 37.4,
+      latitude: 33.749,
+      longitude: -84.388,
+      timestamp: new Date().toISOString(),
+    };
     try {
+      if (!isOnline()) {
+        pushOfflineBuffer({
+          id: crypto.randomUUID(),
+          type: "sensor",
+          payload,
+          timestamp: new Date().toISOString(),
+        });
+        setBufferCount(getOfflineBuffer().length);
+        setWatchState("impact");
+        return;
+      }
       await fetch("/api/innerwear/sensor-data", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          deviceId: "innerwear_dev_001",
-          accelerometerX: 52.4,
-          accelerometerY: 38.6,
-          accelerometerZ: 12.1,
-          heartRate: 118,
-          temperature: 37.4,
-          latitude: 33.749,
-          longitude: -84.388,
-          timestamp: new Date().toISOString(),
-        }),
+        body: JSON.stringify(payload),
       });
       setWatchState("impact");
     } catch {
@@ -98,6 +119,45 @@ export default function ChildWatchPage() {
       setSensorSimLoading(false);
     }
   }, []);
+
+  const syncBuffer = useCallback(async () => {
+    const buffer = getOfflineBuffer();
+    if (buffer.length === 0 || !isOnline()) return;
+    setSyncing(true);
+    for (const entry of buffer) {
+      try {
+        if (entry.type === "sensor") {
+          await fetch("/api/innerwear/sensor-data", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ...(entry.payload as Record<string, unknown>), offlineBuffered: true }),
+          });
+        }
+        removeOfflineEntry(entry.id);
+      } catch {
+        break;
+      }
+    }
+    setBufferCount(getOfflineBuffer().length);
+    setSyncing(false);
+  }, []);
+
+  useEffect(() => {
+    const on = () => setOnline(true);
+    const off = () => setOnline(false);
+    window.addEventListener("online", on);
+    window.addEventListener("offline", off);
+    return () => {
+      window.removeEventListener("online", on);
+      window.removeEventListener("offline", off);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (online && bufferCount > 0) {
+      syncBuffer();
+    }
+  }, [online]);
 
   const { data: incidents } = useGetActiveIncidents({
     query: { refetchInterval: 3000, queryKey: getGetActiveIncidentsQueryKey() },
@@ -188,6 +248,21 @@ export default function ChildWatchPage() {
             </span>
             <div className="flex items-center gap-1">
               {watchState === "help_coming" && <span className="text-blue-400 text-xs font-mono animate-pulse">SOS</span>}
+              {!online && (
+                <span className="flex items-center gap-0.5 text-red-400 text-[10px] font-semibold animate-pulse">
+                  <WifiOff size={10} /> OFFLINE
+                </span>
+              )}
+              {bufferCount > 0 && online && (
+                <span className="text-yellow-400 text-[10px] font-semibold">
+                  {bufferCount} buffered
+                </span>
+              )}
+              {syncing && (
+                <span className="flex items-center gap-0.5 text-green-400 text-[10px] font-semibold animate-pulse">
+                  <RefreshCw size={10} className="animate-spin" /> sync
+                </span>
+              )}
               <Shield size={12} className="text-slate-400" />
             </div>
           </div>
@@ -537,6 +612,17 @@ export default function ChildWatchPage() {
           <Zap size={13} />
           {sensorSimLoading ? "Sending to sensor API…" : "Fire Sensor Pipeline (9.2g → API → Incident)"}
         </button>
+        {bufferCount > 0 && (
+          <button
+            onClick={syncBuffer}
+            disabled={syncing || !online}
+            className="w-full mt-2 py-2 rounded-xl bg-green-900/30 border border-green-700/50 text-green-400 text-sm font-medium hover:bg-green-900/50 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+            data-testid="button-sync-buffer"
+          >
+            <RefreshCw size={13} className={syncing ? "animate-spin" : ""} />
+            {syncing ? "Syncing…" : `Sync ${bufferCount} buffered reading${bufferCount === 1 ? "" : "s"}`}
+          </button>
+        )}
       </div>
     </div>
   );
