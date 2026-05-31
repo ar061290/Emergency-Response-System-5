@@ -34,6 +34,46 @@ router.post("/ai/hospital-recommendation", async (req, res) => {
     return;
   }
 
+  function computeScore(h: (typeof hospitals)[0]) {
+    let score = 0;
+    if (h.type === "Level I Trauma Center") score += 40;
+    else if (h.type === "Level II Trauma Center") score += 30;
+    else if (h.type === "Children's Hospital") score += 25;
+    else score += 10;
+    if (h.hasPediatricTeam) score += 20;
+    if (h.hasTraumaSurgery) score += 15;
+    if (h.hasCTScan) score += 10;
+    score += h.traumaBeds * 1;
+    score += h.icuBeds * 0.5;
+    score += h.rating * 3;
+    score -= (h.distanceKm ?? 0) * 2;
+    score -= (h.etaMinutes ?? 0) * 1;
+    return Math.max(0, score);
+  }
+
+  const ranked = [...hospitals]
+    .map((h) => ({ ...h, computedScore: computeScore(h) }))
+    .sort((a, b) => b.computedScore - a.computedScore)
+    .map((h, i) => ({
+      id: h.id,
+      rank: i + 1,
+      confidenceScore: Math.min(0.99, Math.max(0.6, (h.computedScore / 100) - i * 0.05)),
+      reason: `${h.name} is ${h.distanceKm ?? "~"} km away with ${h.type} status, ${h.hasPediatricTeam ? "pediatric team, " : ""}and ${h.traumaBeds} trauma beds.`,
+    }));
+
+  const fallback = {
+    rankings: ranked,
+    aiAssessment: `Severity: ${incident.severity}. ${ranked[0].reason} ` +
+      `Child age: ${incident.childAge ?? "unknown"}. ` +
+      `Impact: ${incident.impactMagnitude ?? "unknown"}.`,
+    fallback: true,
+  };
+
+  if (!openai) {
+    res.json(fallback);
+    return;
+  }
+
   try {
     const prompt = `You are an emergency medical dispatch AI. A child has been in an accident.
 
@@ -76,7 +116,7 @@ Rank these hospitals from best to worst for this specific child's emergency. For
     res.json(parsed);
   } catch (err) {
     req.log.error(err);
-    res.status(500).json({ error: "AI recommendation failed", fallback: true });
+    res.json(fallback);
   }
 });
 
@@ -91,6 +131,21 @@ router.post("/ai/classify-severity", async (req, res) => {
 
   if (typeof impactMagnitude !== "number") {
     res.status(400).json({ error: "impactMagnitude is required" });
+    return;
+  }
+
+  const fallbackSeverity =
+    impactMagnitude > 12 ? "critical" : impactMagnitude > 7 ? "moderate" : "minor";
+  const fallback = {
+    severity: fallbackSeverity,
+    confidence: 0.6,
+    reasoning: "Rule-based fallback (AI unavailable).",
+    recommendImmediateDispatch: impactMagnitude > 7,
+    fallback: true,
+  };
+
+  if (!openai) {
+    res.json(fallback);
     return;
   }
 
@@ -127,27 +182,35 @@ Respond with ONLY valid JSON:
     res.json(parsed);
   } catch (err) {
     req.log.error(err);
-    const fallbackSeverity =
-      impactMagnitude > 12 ? "critical" : impactMagnitude > 7 ? "moderate" : "minor";
-    res.json({
-      severity: fallbackSeverity,
-      confidence: 0.6,
-      reasoning: "Rule-based fallback (AI unavailable).",
-      recommendImmediateDispatch: impactMagnitude > 7,
-      fallback: true,
-    });
+    res.json(fallback);
   }
 });
 
+const fallbackVoiceReplies = [
+  "Help is on the way. Stay calm, you're doing great.",
+  "Everything is going to be okay. An ambulance is coming right now.",
+  "You're so brave. I'm here with you, and help is coming soon.",
+  "Don't worry, you're not alone. The emergency team is on their way.",
+  "You're doing wonderfully. Stay where you are, and we'll get you help.",
+];
+
+function getFallbackVoiceReply(): string {
+  return fallbackVoiceReplies[Math.floor(Math.random() * fallbackVoiceReplies.length)];
+}
+
 router.post("/ai/voice-chat", async (req, res) => {
-  const { message, childName, incidentContext } = req.body as {
+  const { message, childName } = req.body as {
     message: string;
     childName?: string;
-    incidentContext?: string;
   };
 
   if (!message?.trim()) {
     res.status(400).json({ error: "message is required" });
+    return;
+  }
+
+  if (!openai) {
+    res.json({ reply: getFallbackVoiceReply(), fallback: true });
     return;
   }
 
@@ -159,8 +222,7 @@ Rules:
 - Never say anything scary. Always be reassuring.
 - If the child says where it hurts, acknowledge it and say help is coming.
 - Always end with something reassuring like "Help is on the way" or "You're doing great".
-- Keep responses under 3 sentences.
-${incidentContext ? `\nIncident context: ${incidentContext}` : ""}`;
+- Keep responses under 3 sentences.`;
 
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
@@ -171,14 +233,11 @@ ${incidentContext ? `\nIncident context: ${incidentContext}` : ""}`;
       max_tokens: 150,
     });
 
-    const reply = completion.choices[0]?.message?.content ?? "Help is on the way. Stay calm, you're doing great.";
+    const reply = completion.choices[0]?.message?.content ?? getFallbackVoiceReply();
     res.json({ reply });
   } catch (err) {
     req.log.error(err);
-    res.json({
-      reply: "Help is on the way. Stay calm, you're doing great.",
-      fallback: true,
-    });
+    res.json({ reply: getFallbackVoiceReply(), fallback: true });
   }
 });
 

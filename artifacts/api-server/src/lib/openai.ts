@@ -1,9 +1,11 @@
 import OpenAI from "openai";
 
-if (!process.env.OPENAI_API_KEY) {
-  throw new Error("OPENAI_API_KEY environment variable is not set");
+function getOpenAI() {
+  const key = process.env.OPENAI_API_KEY;
+  if (!key || key.startsWith("sk-placeholder")) {
+    return null;
+  }
+  return new OpenAI({ apiKey: key });
 }
 
-export const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+export const openai = getOpenAI();
