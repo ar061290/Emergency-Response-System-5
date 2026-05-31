@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
 import {
   ArrowLeft, Bus, MapPin, AlertTriangle, CheckCircle, TrendingUp,
@@ -12,6 +13,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   useListRouteAnalytics, getListRouteAnalyticsQueryKey,
   useListBuses, getListBusesQueryKey,
+  useListCoverageRequests, getListCoverageRequestsQueryKey,
   useSubmitCoverageRequest,
 } from "@workspace/api-client-react";
 import type { RouteAnalytic } from "@workspace/api-client-react";
@@ -81,7 +83,7 @@ function RouteMapSketch({ route, selected }: { route: RouteAnalytic; selected: b
   );
 }
 
-function RequestModal({ route, onClose }: { route: RouteAnalytic; onClose: () => void }) {
+function RequestModal({ route, onClose, queryClient }: { route: RouteAnalytic; onClose: () => void; queryClient: ReturnType<typeof useQueryClient> }) {
   const [submitted, setSubmitted] = useState(false);
   const submitRequest = useSubmitCoverageRequest();
 
@@ -102,7 +104,10 @@ function RequestModal({ route, onClose }: { route: RouteAnalytic; onClose: () =>
         },
       },
       {
-        onSuccess: () => setSubmitted(true),
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: getListCoverageRequestsQueryKey() });
+          setSubmitted(true);
+        },
         onError: () => setSubmitted(true),
       }
     );
@@ -163,6 +168,7 @@ function RequestModal({ route, onClose }: { route: RouteAnalytic; onClose: () =>
 }
 
 export default function RouteSafetyPage() {
+  const queryClient = useQueryClient();
   const [selectedRoute, setSelectedRoute] = useState<RouteAnalytic | null>(null);
   const [requestRoute, setRequestRoute] = useState<RouteAnalytic | null>(null);
 
@@ -173,6 +179,12 @@ export default function RouteSafetyPage() {
   const { data: buses } = useListBuses(undefined, {
     query: { queryKey: getListBusesQueryKey() },
   });
+
+  const { data: coverageRequests } = useListCoverageRequests({
+    query: { queryKey: getListCoverageRequestsQueryKey() },
+  });
+
+  const requestedRouteIds = new Set(coverageRequests?.map((r) => r.routeAnalyticId) ?? []);
 
   const criticalCount = routes?.filter((r) => r.coverageScore < 60).length ?? 0;
   const avgCoverage = routes?.length
@@ -267,6 +279,9 @@ export default function RouteSafetyPage() {
                       <div className="flex items-center justify-between mb-1">
                         <span className="font-semibold text-sm truncate">{route.routeName}</span>
                         <div className="flex items-center gap-1 shrink-0">
+                          {requestedRouteIds.has(route.id) && (
+                            <span className="text-xs text-green-400 font-medium">Requested</span>
+                          )}
                           {route.isHighRisk && <AlertTriangle size={12} className="text-red-400" />}
                           <span className={`text-xs font-bold ${
                             route.coverageScore >= 80 ? "text-green-400" : route.coverageScore >= 60 ? "text-yellow-400" : "text-red-400"
@@ -314,13 +329,19 @@ export default function RouteSafetyPage() {
                     <p className="text-sm text-muted-foreground mt-0.5">{selectedRoute.schoolName}</p>
                   </div>
                   {selectedRoute.coverageScore < 80 && (
-                    <Button
-                      size="sm"
-                      className="bg-yellow-600 hover:bg-yellow-700 text-black font-bold text-xs shrink-0"
-                      onClick={() => setRequestRoute(selectedRoute)}
-                    >
-                      <ShieldAlert size={12} className="mr-1" /> Request Coverage
-                    </Button>
+                    requestedRouteIds.has(selectedRoute.id) ? (
+                      <span className="inline-flex items-center gap-1 text-xs text-green-400 font-medium">
+                        <CheckCircle size={12} /> Coverage Requested
+                      </span>
+                    ) : (
+                      <Button
+                        size="sm"
+                        className="bg-yellow-600 hover:bg-yellow-700 text-black font-bold text-xs shrink-0"
+                        onClick={() => setRequestRoute(selectedRoute)}
+                      >
+                        <ShieldAlert size={12} className="mr-1" /> Request Coverage
+                      </Button>
+                    )
                   )}
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -453,7 +474,7 @@ export default function RouteSafetyPage() {
         )}
       </div>
 
-      {requestRoute && <RequestModal route={requestRoute} onClose={() => setRequestRoute(null)} />}
+      {requestRoute && <RequestModal route={requestRoute} onClose={() => setRequestRoute(null)} queryClient={queryClient} />}
     </div>
   );
 }
