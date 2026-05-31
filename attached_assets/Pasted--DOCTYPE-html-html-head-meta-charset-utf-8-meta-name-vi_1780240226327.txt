@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RoadSoS Kids</title>
+<style>
+body{margin:0;font-family:Inter,Arial,sans-serif;background:#0b1020;color:#eef3ff}
+.hero{padding:90px 8%;background:linear-gradient(135deg,#0f1730,#233f8f)}
+section{padding:60px 8%}
+h1{font-size:64px;margin:0}
+h2{font-size:38px}
+.card{background:#121a31;border:1px solid #2d4588;border-radius:18px;padding:24px;margin:15px 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px}
+.mock{background:#09111f;border:2px solid #3d68d6;border-radius:22px;padding:20px}
+.flow{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.step{background:#213a79;padding:12px 18px;border-radius:10px}
+pre{background:#07101c;padding:18px;border-radius:12px;overflow:auto}
+.small{color:#b9c8f5}
+</style>
+</head>
+<body>
+
+<div class="hero">
+<h1>RoadSoS Kids</h1>
+<p style="font-size:24px">AI-Powered Child Emergency Detection & Response Platform</p>
+<p>Smart Innerwear + Optional Smartwatch + Parent Command Center + Emergency Routing AI</p>
+</div>
+
+<section>
+<h2>The Problem</h2>
+<div class="card">
+When a child is involved in a school bus or transport accident, parents may not know immediately, emergency responders lack context, and valuable time is lost locating the right medical facility.
+</div>
+</section>
+
+<section>
+<h2>The Solution</h2>
+<div class="flow">
+<div class="step">Impact Detected</div>
+→
+<div class="step">AI Assessment</div>
+→
+<div class="step">Parent Alerted</div>
+→
+<div class="step">Ambulance Routed</div>
+→
+<div class="step">Trauma Center Selected</div>
+</div>
+</section>
+
+<section>
+<h2>Hardware Ecosystem</h2>
+<div class="grid">
+<div class="card">
+<h3>Smart Innerwear (Primary Device)</h3>
+<ul>
+<li>Accelerometer</li>
+<li>GPS</li>
+<li>Heart-rate sensor</li>
+<li>Temperature sensor</li>
+<li>eSIM connectivity</li>
+<li>Offline emergency detection</li>
+</ul>
+<p><b>Works even if the watch is removed.</b></p>
+</div>
+<div class="card">
+<h3>Optional Smartwatch</h3>
+<ul>
+<li>Voice chatbot</li>
+<li>Child reassurance</li>
+<li>Pain reporting</li>
+<li>Emergency status updates</li>
+</ul>
+</div>
+</div>
+</section>
+
+<section>
+<h2>Accident Journey</h2>
+<div class="card">
+1. Accident occurs<br>
+2. Innerwear detects impact<br>
+3. GPS captured<br>
+4. Backend classifies severity<br>
+5. Parents notified<br>
+6. Nearest ambulances found<br>
+7. Best trauma center selected<br>
+8. Live tracking begins
+</div>
+</section>
+
+<section>
+<h2>Child Interface (Smartwatch)</h2>
+<div class="mock">
+<h3>🚨 Emergency Detected</h3>
+<p>RoadSoS is helping you.</p>
+<p>Emergency services are being notified.</p>
+<p><b>Voice Assistant:</b> “Can you tell me where it hurts?”</p>
+<p>🎤 Listening...</p>
+<p>ETA: 7 minutes</p>
+</div>
+</section>
+
+<section>
+<h2>Parent Command Center</h2>
+<div class="mock">
+<h3>🧒 Student Safety Overview</h3>
+<p><b>Student:</b> Aarav</p>
+<p><b>Status:</b> Emergency Active</p>
+
+<h3>🗺️ Live Map Layers</h3>
+<ul>
+<li>Student Location</li>
+<li>School Bus Location</li>
+<li>Ambulance Locations</li>
+<li>Hospitals</li>
+<li>Trauma Centers</li>
+<li>Police Stations</li>
+</ul>
+
+<h3>🚑 Ambulance Tracking</h3>
+<ul>
+<li>Assigned Ambulance: A-14</li>
+<li>Distance: 2.3 km</li>
+<li>ETA: 7 min</li>
+<li>Status: En Route</li>
+</ul>
+
+<h3>🏥 Nearby Hospitals</h3>
+<ol>
+<li>Apollo Hospital (3.1 km)</li>
+<li>Yashoda Hospital (4.7 km)</li>
+<li>CARE Hospital (5.8 km)</li>
+</ol>
+
+<h3>🏥 Nearby Trauma Centers</h3>
+<ol>
+<li>Apollo Trauma Center</li>
+<li>CARE Emergency Center</li>
+<li>City Trauma Institute</li>
+</ol>
+
+<h3>📍 Student Tracking</h3>
+<ul>
+<li>Live GPS Tracking</li>
+<li>School Route Overlay</li>
+<li>Historical Route Playback</li>
+</ul>
+
+<h3>📜 Emergency Timeline</h3>
+<ul>
+<li>Impact Detected</li>
+<li>GPS Locked</li>
+<li>Parent Notified</li>
+<li>Ambulance Assigned</li>
+<li>Hospital Selected</li>
+</ul>
+
+<h3>🛣️ Route Safety Analytics</h3>
+<p>Coverage Score: 68%</p>
+<p>Average Ambulance Response Time: 11 min</p>
+
+<h3>🚑 Ambulance Coverage Requests</h3>
+<p>The platform identifies routes frequently used by children where ambulance availability is consistently poor.</p>
+<ul>
+<li>Route: Home → School</li>
+<li>Coverage: Low</li>
+<li>Average Ambulance Distance: 9.8 km</li>
+<li>Suggested Ambulance Post: Sector 5 Junction</li>
+<li>Predicted Improvement: 11 min → 5 min</li>
+</ul>
+<p>Requests can be submitted to schools, EMS authorities and municipalities to improve emergency infrastructure.</p>
+</div>
+</section>
+
+<section>
+<h2>Emergency Responder Dashboard</h2>
+<div class="mock">
+<h3>🚨 Incoming Incident</h3>
+<ul>
+<li>Severity: Critical</li>
+<li>Live Child Location</li>
+<li>Vitals Available</li>
+<li>Recommended Trauma Center</li>
+<li>Suggested Route</li>
+<li>Parent Contact</li>
+</ul>
+</div>
+</section>
+
+<section>
+<h2>Backend Architecture</h2>
+<pre>
+Smart Innerwear
+      ↓
+Impact Detection Engine
+      ↓
+RoadSoS Backend (FastAPI)
+      ↓
+Severity Classifier
+      ↓
+Emergency Routing Engine
+      ↓
+Parent Dashboard / Responder Dashboard
+</pre>
+</section>
+
+<section>
+<h2>Sample Code</h2>
+<pre>
+class ImpactDetector:
+    def detect_impact(self,x,y,z):
+        magnitude=(x*x+y*y+z*z)**0.5
+        return magnitude > THRESHOLD
+
+@app.post("/accident-detected")
+async def accident_detected(data):
+    services = db.get_nearest_services(
+        data["lat"],
+        data["lon"]
+    )
+    return services
+</pre>
+</section>
+
+<section>
+<h2>Offline Functionality</h2>
+<div class="card">
+<ul>
+<li>Local impact detection</li>
+<li>Offline GPS logging</li>
+<li>Cached emergency facilities</li>
+<li>Sync when connectivity returns</li>
+</ul>
+</div>
+</section>
+
+<section>
+<h2>Future Vision</h2>
+<div class="card">
+RoadSoS evolves from an emergency response platform into a transportation safety intelligence network that identifies ambulance deserts, optimizes emergency infrastructure placement, and protects children before accidents happen.
+</div>
+</section>
+
+</body>
+</html>
