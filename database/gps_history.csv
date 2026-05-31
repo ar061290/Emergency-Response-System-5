@@ -1,0 +1,64 @@
+id,incident_id,latitude,longitude,location_name,recorded_at
+gps-001,inc-001,17.3812,78.4756,AMB-108-02 Dispatched — Koti Station,2026-05-31T07:41:00.000Z
+gps-002,inc-001,17.385,78.471,"Sultan Bazaar, Abids Road",2026-05-31T07:42:30.000Z
+gps-003,inc-001,17.393,78.4651,Nampally Metro Junction,2026-05-31T07:44:00.000Z
+gps-004,inc-001,17.401,78.459,Masab Tank X Roads,2026-05-31T07:45:30.000Z
+gps-005,inc-001,17.4085,78.45,Lakdikapul Bridge,2026-05-31T07:46:30.000Z
+gps-006,inc-001,17.4145,78.3812,INCIDENT SCENE — Tank Bund Road Near NTR Garden,2026-05-31T07:48:30.000Z
+gps-007,inc-001,17.4145,78.3812,On Scene — Treating Ananya Sharma,2026-05-31T07:50:00.000Z
+gps-008,inc-001,17.416,78.387,Tank Bund Road Northbound,2026-05-31T07:52:00.000Z
+gps-009,inc-001,17.418,78.398,Khairatabad Metro Station,2026-05-31T07:53:30.000Z
+gps-010,inc-001,17.4205,78.404,Somajiguda Circle,2026-05-31T07:55:00.000Z
+gps-011,inc-001,17.4225,78.406,Road No. 72 Jubilee Hills Approach,2026-05-31T07:56:30.000Z
+gps-012,inc-001,17.4241,78.4082,HOSPITAL ARRIVAL — Apollo Hospitals Jubilee Hills,2026-05-31T07:58:00.000Z
+gps-013,inc-002,17.4396,78.4986,INCIDENT SCENE — Secunderabad Railway Station Platform 3,2026-05-31T07:52:00.000Z
+gps-014,inc-002,17.4396,78.4986,On Scene — Assessing Mohammed Zaid,2026-05-31T07:54:00.000Z
+gps-015,inc-002,17.442,78.499,"MG Road, Secunderabad",2026-05-31T07:56:00.000Z
+gps-016,inc-002,17.4441,78.4986,HOSPITAL ARRIVAL — KIMS Hospitals Secunderabad,2026-05-31T07:58:00.000Z
+gps-017,inc-003,17.3625,78.4719,AMB-108-05 Dispatched — Mehdipatnam Station,2026-05-31T08:02:30.000Z
+gps-018,inc-003,17.364,78.47,Mehdipatnam X Roads,2026-05-31T08:03:30.000Z
+gps-019,inc-003,17.3608,78.4719,INCIDENT SCENE — Charminar Bus Stand Old City,2026-05-31T08:08:50.000Z
+gps-020,inc-003,17.3625,78.4719,On Scene — EpiPen administered,2026-05-31T08:10:00.000Z
+gps-021,inc-003,17.368,78.469,Shalibanda Road,2026-05-31T08:11:30.000Z
+gps-022,inc-003,17.378,78.467,Purana Haveli Road,2026-05-31T08:13:00.000Z
+gps-023,inc-003,17.392,78.464,Nampally Junction,2026-05-31T08:14:30.000Z
+gps-024,inc-003,17.4048,78.4656,HOSPITAL ARRIVAL — Niloufer Hospital Lakdikapul,2026-05-31T08:16:00.000Z
+gps-025,inc-004,17.393,78.4551,INCIDENT SCENE — Nampally Metro Station,2026-05-31T08:05:00.000Z
+gps-026,inc-004,17.393,78.4551,On Scene — IV Glucose administered,2026-05-31T08:09:00.000Z
+gps-027,inc-004,17.398,78.457,"SP Road, Begum Bazar",2026-05-31T08:10:30.000Z
+gps-028,inc-004,17.408,78.459,Basheerbagh,2026-05-31T08:11:30.000Z
+gps-029,inc-004,17.42,78.4615,Raj Bhavan Road,2026-05-31T08:12:30.000Z
+gps-030,inc-004,17.4214,78.4628,HOSPITAL ARRIVAL — NIMS Punjagutta,2026-05-31T08:13:30.000Z
+gps-031,inc-005,17.3987,78.5538,AMB-108-09 Dispatched — Uppal Station,2026-05-31T08:08:00.000Z
+gps-032,inc-005,17.405,78.545,Uppal Ring Road,2026-05-31T08:09:30.000Z
+gps-033,inc-005,17.4289,78.5101,INCIDENT SCENE — Uppal X Roads,2026-05-31T08:14:00.000Z
+gps-034,inc-005,17.4289,78.5101,On Scene — Assessment underway,2026-05-31T08:16:00.000Z
+gps-035,inc-005,17.435,78.506,Nacharam Industrial Area Road,2026-05-31T08:18:00.000Z
+gps-036,inc-005,17.4441,78.4986,HOSPITAL ARRIVAL — KIMS Hospitals Secunderabad,2026-05-31T08:20:30.000Z
+gps-037,inc-006,17.4198,78.4477,INCIDENT SCENE — Banjara Hills Road No. 1,2026-05-31T08:09:00.000Z
+gps-038,inc-006,17.4198,78.4477,On Scene — Nebulization started,2026-05-31T08:13:00.000Z
+gps-039,inc-006,17.419,78.44,KBR Park Road,2026-05-31T08:14:30.000Z
+gps-040,inc-006,17.4185,78.4382,HOSPITAL ARRIVAL — Rainbow Children's Hospital Banjara Hills,2026-05-31T08:15:30.000Z
+gps-041,inc-007,17.4214,78.4628,INCIDENT SCENE — Punjagutta Circle,2026-05-31T08:06:00.000Z
+gps-042,inc-007,17.425,78.46,Raj Bhavan Road,2026-05-31T08:10:00.000Z
+gps-043,inc-007,17.428,78.457,Somajiguda Junction,2026-05-31T08:12:00.000Z
+gps-044,inc-007,17.4289,78.4553,HOSPITAL ARRIVAL — Yashoda Hospitals Somajiguda,2026-05-31T08:14:00.000Z
+gps-045,inc-008,17.4126,78.3601,INCIDENT SCENE — Gachibowli Stadium Entry Gate,2026-05-31T08:11:00.000Z
+gps-046,inc-008,17.4126,78.3601,On Scene — Assessment Arjun Rao,2026-05-31T08:15:00.000Z
+gps-047,inc-008,17.4126,78.3601,HOSPITAL ARRIVAL — Continental Hospitals Gachibowli (Same complex),2026-05-31T08:17:00.000Z
+gps-048,inc-009,17.393,78.5212,INCIDENT SCENE — Dilsukhnagar Bus Depot,2026-05-31T08:08:00.000Z
+gps-049,inc-009,17.393,78.5212,On Scene — Seizure subsiding,2026-05-31T08:10:00.000Z
+gps-050,inc-009,17.375,78.535,LB Nagar Circle Road,2026-05-31T08:12:00.000Z
+gps-051,inc-009,17.36,78.542,Saroor Nagar Main Road,2026-05-31T08:13:30.000Z
+gps-052,inc-009,17.3451,78.551,HOSPITAL ARRIVAL — Gleneagles Hospital LB Nagar,2026-05-31T08:15:00.000Z
+gps-053,inc-010,17.4441,78.4986,"INCIDENT SCENE — Gymkhana Sports Ground, Secunderabad",2026-05-31T07:30:00.000Z
+gps-054,inc-010,17.4441,78.4986,On Scene — Assessing Rithvik Naidu,2026-05-31T07:36:00.000Z
+gps-055,inc-010,17.4441,78.4986,HOSPITAL ARRIVAL — KIMS Hospitals Secunderabad (Adjacent),2026-05-31T07:45:00.000Z
+gps-056,inc-011,17.4478,78.4731,"INCIDENT SCENE — Gandhi Hospital Gate, Secunderabad",2026-05-31T07:55:00.000Z
+gps-057,inc-011,17.4478,78.4731,On Scene — Assessing Tarun Singh,2026-05-31T07:58:00.000Z
+gps-058,inc-011,17.4478,78.4731,HOSPITAL ARRIVAL — Gandhi Medical College & Hospital (On-site),2026-05-31T08:02:00.000Z
+gps-059,inc-012,17.393,78.5212,INCIDENT SCENE — Uppal Bhagayath Road,2026-05-31T08:10:00.000Z
+gps-060,inc-012,17.393,78.5212,On Scene — Assessing Aditya Kumar,2026-05-31T08:14:00.000Z
+gps-061,inc-012,17.388,78.51,Saidabad Bridge,2026-05-31T08:16:00.000Z
+gps-062,inc-012,17.386,78.495,Dilsukhnagar - Malakpet Road,2026-05-31T08:18:00.000Z
+gps-063,inc-012,17.3837,78.4734,HOSPITAL ARRIVAL — Osmania General Hospital,2026-05-31T08:20:00.000Z
