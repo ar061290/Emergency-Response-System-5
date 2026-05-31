@@ -19,7 +19,10 @@ import {
   useListMessages, getListMessagesQueryKey,
   useSendMessage,
   useListBuses, getListBusesQueryKey,
+  useListAmbulances, getListAmbulancesQueryKey,
+  useListHospitals, getListHospitalsQueryKey,
 } from "@workspace/api-client-react";
+import LiveMap from "@/components/LiveMap";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
 
@@ -77,6 +80,16 @@ export default function ParentDashboardPage() {
     query: { refetchInterval: 10000, queryKey: getListBusesQueryKey() },
   });
   const activeBus = buses?.find((b) => b.isActive && b.currentStatus === "in_transit") ?? null;
+
+  const { data: ambulances } = useListAmbulances({
+    query: { refetchInterval: 10000, queryKey: getListAmbulancesQueryKey() },
+  });
+  const activeAmbulance = ambulances?.find((a) => a.status === "en_route" || a.status === "on_scene") ?? null;
+
+  const { data: hospitals } = useListHospitals(undefined, {
+    query: { enabled: !!incident?.latitude, queryKey: getListHospitalsQueryKey() },
+  });
+  const matchedHospital = hospitals?.find((h) => incident?.hospitalId === h.id) ?? hospitals?.[0];
 
   const latestVitals = vitals?.[0];
   const elapsedMin = activeIncidents?.find((i) => i.incidentId === incidentId)?.elapsedMinutes;
@@ -231,9 +244,9 @@ export default function ParentDashboardPage() {
                 </Card>
               </div>
 
-              {/* Map placeholder + Vitals row */}
+              {/* Live Map + Vitals row */}
               <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-                {/* Map placeholder */}
+                {/* Real Leaflet map */}
                 <Card className="lg:col-span-3 bg-card border-border" data-testid="card-map">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm flex items-center gap-2">
@@ -241,73 +254,19 @@ export default function ParentDashboardPage() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="p-0">
-                    <div className="relative bg-slate-900 rounded-b-lg overflow-hidden" style={{ height: 180 }}>
-                      {/* Grid map visual */}
-                      <div className="absolute inset-0 mission-grid opacity-30" />
-                      {/* Streets */}
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="absolute w-full h-px bg-slate-700/60" style={{ top: "40%" }} />
-                        <div className="absolute w-full h-px bg-slate-700/60" style={{ top: "70%" }} />
-                        <div className="absolute h-full w-px bg-slate-700/60" style={{ left: "30%" }} />
-                        <div className="absolute h-full w-px bg-slate-700/60" style={{ left: "65%" }} />
-                        {/* Child pin */}
-                        <div className="absolute flex flex-col items-center" style={{ left: "44%", top: "38%" }}>
-                          <div className="w-4 h-4 rounded-full bg-red-500 border-2 border-white shadow-lg animate-pulse" data-testid="map-child-pin" />
-                          <div className="text-xs text-white bg-slate-900/80 rounded px-1 mt-0.5 whitespace-nowrap">
-                            {incident?.childName}
-                          </div>
-                        </div>
-                        {/* Ambulance pin */}
-                        <div className="absolute flex flex-col items-center" style={{ left: "28%", top: "58%" }}>
-                          <div className="w-4 h-4 rounded-full bg-blue-500 border-2 border-white shadow-lg" data-testid="map-ambulance-pin" />
-                          <div className="text-xs text-white bg-slate-900/80 rounded px-1 mt-0.5 whitespace-nowrap">
-                            {incident?.ambulanceUnit ?? "AMB"}
-                          </div>
-                        </div>
-                        {/* Hospital pin */}
-                        <div className="absolute flex flex-col items-center" style={{ left: "62%", top: "22%" }}>
-                          <div className="w-4 h-4 rounded-full bg-green-500 border-2 border-white shadow-lg" data-testid="map-hospital-pin" />
-                          <div className="text-xs text-white bg-slate-900/80 rounded px-1 mt-0.5 whitespace-nowrap">Hospital</div>
-                        </div>
-                        {/* School bus pin */}
-                        {activeBus && (
-                          <div className="absolute flex flex-col items-center" style={{ left: "75%", top: "55%" }}>
-                            <div className="w-4 h-4 rounded-sm bg-yellow-400 border-2 border-white shadow-lg flex items-center justify-center" data-testid="map-bus-pin">
-                              <Bus size={8} className="text-black" />
-                            </div>
-                            <div className="text-xs text-white bg-slate-900/80 rounded px-1 mt-0.5 whitespace-nowrap">
-                              {activeBus.busNumber ?? activeBus.busId}
-                            </div>
-                          </div>
-                        )}
-                        {/* Route line */}
-                        <svg className="absolute inset-0 w-full h-full" style={{ pointerEvents: "none" }}>
-                          <line x1="32%" y1="62%" x2="46%" y2="42%" stroke="#3b82f6" strokeWidth="1.5" strokeDasharray="4 3" opacity="0.7" />
-                          <line x1="46%" y1="42%" x2="64%" y2="26%" stroke="#22c55e" strokeWidth="1.5" strokeDasharray="4 3" opacity="0.7" />
-                        </svg>
-                      </div>
-                      {/* Legend */}
-                      <div className="absolute bottom-2 right-2 flex flex-col gap-1">
-                        <div className="flex items-center gap-1 bg-slate-900/80 rounded px-1.5 py-0.5">
-                          <div className="w-2 h-2 rounded-full bg-red-500" />
-                          <span className="text-xs text-slate-300">Child</span>
-                        </div>
-                        <div className="flex items-center gap-1 bg-slate-900/80 rounded px-1.5 py-0.5">
-                          <div className="w-2 h-2 rounded-full bg-blue-500" />
-                          <span className="text-xs text-slate-300">AMB</span>
-                        </div>
-                        <div className="flex items-center gap-1 bg-slate-900/80 rounded px-1.5 py-0.5">
-                          <div className="w-2 h-2 rounded-full bg-green-500" />
-                          <span className="text-xs text-slate-300">Hospital</span>
-                        </div>
-                        {activeBus && (
-                          <div className="flex items-center gap-1 bg-slate-900/80 rounded px-1.5 py-0.5">
-                            <div className="w-2 h-2 rounded-sm bg-yellow-400" />
-                            <span className="text-xs text-slate-300">Bus</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
+                    <LiveMap
+                      childLat={incident?.latitude ?? null}
+                      childLon={incident?.longitude ?? null}
+                      childName={incident?.childName}
+                      ambulanceLat={activeAmbulance?.latitude ?? null}
+                      ambulanceLon={activeAmbulance?.longitude ?? null}
+                      ambulanceUnit={activeAmbulance?.unitNumber ?? incident?.ambulanceUnit}
+                      hospitalLat={matchedHospital?.latitude ?? null}
+                      hospitalLon={matchedHospital?.longitude ?? null}
+                      hospitalName={matchedHospital?.name ?? incident?.hospitalName}
+                      bus={activeBus}
+                      incidentStatus={incident?.status}
+                    />
                   </CardContent>
                 </Card>
 
